@@ -1,0 +1,5 @@
+/generated/
+/target/
+/.idea/
+# Project exclude paths
+/project/target/
