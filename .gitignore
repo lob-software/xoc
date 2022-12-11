@@ -1,5 +1,6 @@
 /generated/
 /target/
 /.idea/
+/test_run_dir/
 # Project exclude paths
 /project/target/
