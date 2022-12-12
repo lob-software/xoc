@@ -1,8 +1,13 @@
 #!/bin/sh
 
-sbt run
+DESIGN=$1
+MAIN_CLASS=$2
 
-vivado -nojournal -mode batch -source src/main/tcl/synth.tcl -tclargs arty-a7-100 -log outputs/synth.log
+echo programming with "$DESIGN"
+
+sbt "runMain $MAIN_CLASS"
+
+vivado -nojournal -mode batch -source src/main/tcl/synth.tcl -tclargs arty-a7-100 "$DESIGN" outputs/synth.log
 
 vivado -nojournal -mode batch -source src/main/tcl/place.tcl -log outputs/place.log
 

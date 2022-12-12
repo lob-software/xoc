@@ -7,7 +7,7 @@ open_checkpoint $output_dir/post_synth.dcp
 # Various pin placements
 ########################
 
-read_xdc arty.xdc
+read_xdc src/main/constraints/arty.xdc
 
 opt_design
 place_design

@@ -24,6 +24,7 @@ module uart_rx
  always @(posedge clock)
  begin
      case(rx_state)
+
      IDLE:
      begin
         reg_rx_dv    <= 1'b0;
@@ -38,6 +39,7 @@ module uart_rx
             rx_state       <= IDLE;
         end     
      end
+
      START:
      begin
         if (reg_clks_cnt == (CLKS_PER_BIT - 1) / 2)
@@ -59,6 +61,7 @@ module uart_rx
             rx_state     <= START;
         end     
      end
+
      DATA:
      begin
         if (reg_clks_cnt < (CLKS_PER_BIT - 1))
