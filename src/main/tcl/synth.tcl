@@ -28,6 +28,8 @@ set output_dir "./outputs"
 # read_ip -verbose outputs/ips/design_1_clk_wiz_0_0/design_1_clk_wiz_0_0.xci
 
 
+puts "Synthesising generated/$design.v"
+
 read_verilog generated/$design.v
 
 # upgrade_ip [get_ips]

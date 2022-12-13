@@ -16,8 +16,8 @@ class Uart(clksPerBit: Int) extends Module {
 
   withClockAndReset(clock, disabledReset) {
     rx.io.uartRx := io.uartRx
-    data := rx.io.rxData
-    io.led := rx.io.rxDv & data
+//    data := rx.io.rxData
+//    io.led := rx.io.rxDv & data
   }
 }
 

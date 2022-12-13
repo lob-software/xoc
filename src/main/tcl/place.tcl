@@ -1,4 +1,4 @@
-set_param board.repoPaths "boards/"
+set_param board.repoPaths "src/main/boards/"
 set output_dir "outputs/"
 
 open_checkpoint $output_dir/post_synth.dcp
