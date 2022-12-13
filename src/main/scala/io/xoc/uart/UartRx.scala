@@ -8,6 +8,7 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
   val io = IO(new Bundle {
     val led = Output(UInt(4.W))
     val uartRx = Input(Bool())
+    val rxDataOut = Output(UInt(8.W))
   })
 
   private val disabledReset: Bool = false.B
@@ -85,6 +86,7 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
     }
 
     io.led := rxData
+    io.rxDataOut := rxData
   }
 }
 
