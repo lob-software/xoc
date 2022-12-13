@@ -5,12 +5,6 @@ import chisel3.util._
 
 class UartRx(CLKS_PER_BIT: Int) extends Module {
 
-  def createCounter(n: Int) = {
-    val cntReg = RegInit(0.U(32.W))
-    cntReg := Mux(cntReg === n.U, 0.U, cntReg + 1.U)
-    cntReg
-  }
-
   val io = IO(new Bundle {
     val led = Output(UInt(4.W))
     val uartRx = Input(Bool())
@@ -20,7 +14,7 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
 
   withClockAndReset(clock, disabledReset) {
 
-    val count = createCounter(CLKS_PER_BIT)
+    val count = Counter(CLKS_PER_BIT)
     val idle :: start :: data :: stop :: cleanup :: Nil = Enum(5)
     val rxState = RegInit(idle)
     val rxDataValid = RegInit(false.B)
@@ -30,7 +24,7 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
     switch(rxState) {
       is(idle) {
 
-        count := 0.U
+        count.reset()
         rxDataValid := false.B
         rxDataIdx := 0.U
 
@@ -42,25 +36,25 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
       }
 
       is(start) {
-        when(count === ((CLKS_PER_BIT - 1) / 2).U) {
+        when(count.value === ((CLKS_PER_BIT - 1) / 2).U) {
           when(!io.uartRx) {
-            count := 0.U
+            count.reset()
             rxState := data
           }.otherwise {
             rxState := idle
           }
         }.otherwise {
-          count := count + 1.U
+          count.inc()
           rxState := start
         }
       }
 
       is(data) {
-        when(count < (CLKS_PER_BIT - 1).U) {
-          count := count + 1.U
+        when(count.value < (CLKS_PER_BIT - 1).U) {
+          count.inc()
           rxState := data
         }.otherwise {
-          count := 0.U
+          count.reset()
           rxData := rxData.bitSet(rxDataIdx, io.uartRx)
 
           when(rxDataIdx < 7.U) {
@@ -74,12 +68,12 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
       }
 
       is(stop) {
-        when(count < (CLKS_PER_BIT - 1).U) {
-          count := count + 1.U
+        when(count.value < (CLKS_PER_BIT - 1).U) {
+          count.inc()
           rxState := stop
         }.otherwise {
           rxDataValid := true.B
-          count := 0.U
+          count.reset()
           rxState := cleanup
         }
       }
