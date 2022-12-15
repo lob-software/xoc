@@ -21,6 +21,7 @@ class UartRxSpec extends AnyFlatSpec with ChiselScalatestTester {
 
       val expectedBytes = Seq(
         // can't do all 0s because Chisel converts them to false when .asBools is called
+        // "b00000000".U,
         "b10101001".U,
         "b11101000".U,
         "b10001111".U,
