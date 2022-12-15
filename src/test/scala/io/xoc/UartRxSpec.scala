@@ -8,13 +8,25 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class UartRxSpec extends AnyFlatSpec with ChiselScalatestTester {
 
+  val CLKS_PER_BIT = 100
+
   private def clockSerial(rx: UartRx): Unit = {
-    rx.clock.step(100)
+    rx.clock.step(CLKS_PER_BIT)
   }
 
-  "UartRx" should "receive bytes" in {
-    test(new UartRx(100)) { rx =>
-      val expectedBytes = Seq("h41".U, "h6A".U, "h74".U, "h6F".U, "h6E".U)
+  "UartRx" should "receive a byte" in {
+    test(new UartRx(CLKS_PER_BIT)) { rx =>
+      rx.io.uartRx.poke(1.U) // keep uart line high
+      clockSerial(rx)
+
+      val expectedBytes = Seq(
+        // can't do all 0s because Chisel converts them to false when .asBools is called
+        "b10101001".U,
+        "b11101000".U,
+        "b10001111".U,
+        "b11111111".U,
+      )
+
       expectedBytes.foreach(expectedByte => assertByteReceived(rx, expectedByte))
     }
   }
@@ -32,9 +44,5 @@ class UartRxSpec extends AnyFlatSpec with ChiselScalatestTester {
     clockSerial(rx)
 
     rx.io.rxDataOut.expect(expectedByte)
-
-    clockSerial(rx)
-    clockSerial(rx)
-    clockSerial(rx)
   }
 }
