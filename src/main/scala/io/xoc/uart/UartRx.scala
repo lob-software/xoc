@@ -6,8 +6,8 @@ import chisel3.util._
 class UartRx(CLKS_PER_BIT: Int) extends Module {
 
   val io = IO(new Bundle {
-    val led = Output(UInt(4.W))
     val uartRx = Input(Bool())
+    val rxDataValid = Output(Bool())
     val rxDataOut = Output(UInt(8.W))
   })
 
@@ -85,7 +85,7 @@ class UartRx(CLKS_PER_BIT: Int) extends Module {
       }
     }
 
-    io.led := rxData
+    io.rxDataValid := rxDataValid
     io.rxDataOut := rxData
   }
 }
