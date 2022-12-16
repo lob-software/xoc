@@ -6,3 +6,4 @@
 *.log
 # Project exclude paths
 /project/target/
+/.bsp/
