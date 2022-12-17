@@ -1,5 +1,6 @@
-package io.xoc
+package io.xoc.core
 
+import Chisel.DecoupledIO
 import chisel3._
 
 
@@ -32,11 +33,10 @@ import chisel3._
  * Order book with best bid and best offer, in price and in size.
  *
  */
+
 class OrderBook extends Module {
   val io = IO(new Bundle {
-    val isBid = Input(Bool())
-    val price = Input(UInt(64.W))
-    val size = Input(UInt(64.W))
+    val input = Input(new OrderBookInput())
 
     val bidPriceOut = Output(UInt(64.W))
     val bidSizeOut = Output(UInt(64.W))
@@ -51,15 +51,15 @@ class OrderBook extends Module {
   val currentAskPrice = RegInit(UInt(64.W), Long.MaxValue.U)
   val currentAskSize = RegInit(UInt(64.W), 0.U)
 
-  val incomingBidBetter = io.isBid && io.price > currentBidPrice
-  val incomingBidPriceTheSameAndSizeBigger = io.isBid && io.price === currentBidPrice && io.size > currentBidSize
-  io.bidPriceOut := Mux(incomingBidBetter, io.price, currentBidPrice)
-  io.bidSizeOut := Mux(incomingBidBetter, io.size, Mux(incomingBidPriceTheSameAndSizeBigger, io.size, currentBidSize))
+  val incomingBidBetter = io.input.isBid && io.input.price > currentBidPrice
+  val incomingBidPriceTheSameAndSizeBigger = io.input.isBid && io.input.price === currentBidPrice && io.input.size > currentBidSize
+  io.bidPriceOut := Mux(incomingBidBetter, io.input.price, currentBidPrice)
+  io.bidSizeOut := Mux(incomingBidBetter, io.input.size, Mux(incomingBidPriceTheSameAndSizeBigger, io.input.size, currentBidSize))
 
-  val incomingAskBetter = !io.isBid && io.price < currentAskPrice
-  val incomingAskPriceTheSameAndSizeBigger = !io.isBid && io.price === currentAskPrice && io.size > currentAskSize
-  io.askPriceOut := Mux(incomingAskBetter, io.price, currentAskPrice)
-  io.askSizeOut := Mux(incomingAskBetter, io.size, Mux(incomingAskPriceTheSameAndSizeBigger, io.size, currentAskSize))
+  val incomingAskBetter = !io.input.isBid && io.input.price < currentAskPrice
+  val incomingAskPriceTheSameAndSizeBigger = !io.input.isBid && io.input.price === currentAskPrice && io.input.size > currentAskSize
+  io.askPriceOut := Mux(incomingAskBetter, io.input.price, currentAskPrice)
+  io.askSizeOut := Mux(incomingAskBetter, io.input.size, Mux(incomingAskPriceTheSameAndSizeBigger, io.input.size, currentAskSize))
 
   currentBidPrice := io.bidPriceOut
   currentBidSize := io.bidSizeOut
@@ -70,16 +70,16 @@ class OrderBook extends Module {
 
   when (priceMatch) {
     // match
-    when (io.isBid) {
+    when (io.input.isBid) {
       // aggressive bid
       io.bidPriceOut := 0.U
       io.bidSizeOut := 0.U
-      io.askSizeOut := currentAskSize - io.size
+      io.askSizeOut := currentAskSize - io.input.size
     }.otherwise {
       // aggressive ask
       io.askPriceOut := Long.MaxValue.U
       io.askSizeOut := 0.U
-      io.bidSizeOut := currentBidSize - io.size
+      io.bidSizeOut := currentBidSize - io.input.size
     }
   }
 }

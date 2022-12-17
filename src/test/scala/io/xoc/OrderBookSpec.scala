@@ -1,22 +1,23 @@
 package io.xoc
 
 import chiseltest._
+import io.xoc.core.OrderBook
 import org.scalatest.flatspec.AnyFlatSpec
 
 
 class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
 
   def bid(ob: OrderBook, price: Int, size: Int): Unit = {
-    ob.io.isBid.poke(true)
-    ob.io.price.poke(price)
-    ob.io.size.poke(size)
+    ob.io.input.isBid.poke(true)
+    ob.io.input.price.poke(price)
+    ob.io.input.size.poke(size)
     ob.clock.step(1)
   }
 
   def ask(ob: OrderBook, price: Int, size: Int): Unit = {
-    ob.io.isBid.poke(false)
-    ob.io.price.poke(price)
-    ob.io.size.poke(size)
+    ob.io.input.isBid.poke(false)
+    ob.io.input.price.poke(price)
+    ob.io.input.size.poke(size)
     ob.clock.step(1)
   }
 
