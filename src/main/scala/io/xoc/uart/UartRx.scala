@@ -3,7 +3,7 @@ package io.xoc.uart
 import chisel3._
 import chisel3.util._
 
-class UartRx(CLKS_PER_BIT: Int) extends Module {
+class UartRx(CLKS_PER_BIT: Int = 10417) extends Module {
 
   val io = IO(new Bundle {
     val uartRx = Input(Bool())

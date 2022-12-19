@@ -45,21 +45,23 @@ class OrderBook extends Module {
     val askSizeOut = Output(UInt(64.W))
   })
 
+  val input = io.input.bits
+
   val currentBidPrice = RegInit(UInt(64.W), 0.U)
   val currentBidSize = RegInit(UInt(64.W), 0.U)
 
   val currentAskPrice = RegInit(UInt(64.W), Long.MaxValue.U)
   val currentAskSize = RegInit(UInt(64.W), 0.U)
 
-  val incomingBidBetter = io.input.isBid && io.input.price > currentBidPrice
-  val incomingBidPriceTheSameAndSizeBigger = io.input.isBid && io.input.price === currentBidPrice && io.input.size > currentBidSize
-  io.bidPriceOut := Mux(incomingBidBetter, io.input.price, currentBidPrice)
-  io.bidSizeOut := Mux(incomingBidBetter, io.input.size, Mux(incomingBidPriceTheSameAndSizeBigger, io.input.size, currentBidSize))
+  val incomingBidBetter = input.isBid && input.price > currentBidPrice
+  val incomingBidPriceTheSameAndSizeBigger = input.isBid && input.price === currentBidPrice && input.size > currentBidSize
+  io.bidPriceOut := Mux(incomingBidBetter, input.price, currentBidPrice)
+  io.bidSizeOut := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
 
-  val incomingAskBetter = !io.input.isBid && io.input.price < currentAskPrice
-  val incomingAskPriceTheSameAndSizeBigger = !io.input.isBid && io.input.price === currentAskPrice && io.input.size > currentAskSize
-  io.askPriceOut := Mux(incomingAskBetter, io.input.price, currentAskPrice)
-  io.askSizeOut := Mux(incomingAskBetter, io.input.size, Mux(incomingAskPriceTheSameAndSizeBigger, io.input.size, currentAskSize))
+  val incomingAskBetter = !input.isBid && input.price < currentAskPrice
+  val incomingAskPriceTheSameAndSizeBigger = !input.isBid && input.price === currentAskPrice && input.size > currentAskSize
+  io.askPriceOut := Mux(incomingAskBetter, input.price, currentAskPrice)
+  io.askSizeOut := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
 
   currentBidPrice := io.bidPriceOut
   currentBidSize := io.bidSizeOut
@@ -70,16 +72,16 @@ class OrderBook extends Module {
 
   when (priceMatch) {
     // match
-    when (io.input.isBid) {
+    when (input.isBid) {
       // aggressive bid
       io.bidPriceOut := 0.U
       io.bidSizeOut := 0.U
-      io.askSizeOut := currentAskSize - io.input.size
+      io.askSizeOut := currentAskSize - input.size
     }.otherwise {
       // aggressive ask
       io.askPriceOut := Long.MaxValue.U
       io.askSizeOut := 0.U
-      io.bidSizeOut := currentBidSize - io.input.size
+      io.bidSizeOut := currentBidSize - input.size
     }
   }
 }
