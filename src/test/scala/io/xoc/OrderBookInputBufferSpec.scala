@@ -8,30 +8,28 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class OrderBookInputBufferSpec extends AnyFlatSpec with ChiselScalatestTester {
 
-  "OrderBookInputBuffer" should "parse data" in {
+  "OrderBookInputBuffer" should "buffer data" in {
     test(new OrderBookInputBuffer()) { obi =>
       obi.io.rxDataValid.poke(true)
-      obi.io.rxData.poke(0.U)
 
+      val side = true.B
+      obi.io.rxData.poke(side)
       obi.clock.step()
-      obi.io.input.bits.isBid.expect(true.B)
+      obi.io.input.valid.expect(false.B)
 
       val price = 100.U
+      obi.io.rxData.poke(price)
+      obi.clock.step()
+      obi.io.input.valid.expect(false.B)
 
-      // TODO: LSB of a long should come first?
-      val priceAsUInts = price.asBools
-//        .reverse
-//        .padTo(64, false.B)
-//        .reverse
-//        .grouped(8)
-        //        .map(bits => {
-        //          var result = "b"
-        //          bits.map(b => if (b.litToBoolean) "1" else "0").foreach(bit => result += bit)
-        //          result
-        //        })
-        .toSeq
+      val size = 101.U
+      obi.io.rxData.poke(size)
+      obi.clock.step()
+      obi.io.input.valid.expect(true.B)
 
-      println(priceAsUInts)
+      obi.io.input.bits.isBid.expect(true.B)
+      obi.io.input.bits.price.expect(price)
+      obi.io.input.bits.size.expect(size)
     }
   }
 }

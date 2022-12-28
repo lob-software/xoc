@@ -1,19 +1,19 @@
 package io.xoc.core
 
 import chisel3._
-import chisel3.util.{Counter, DecoupledIO, Enum, is, switch}
+import chisel3.util.{DecoupledIO, Enum, is, switch}
 
 
 class OrderBookInputBundle extends Bundle {
   val isBid = Input(Bool())
-  val price = Input(UInt(64.W))
-  val size = Input(UInt(64.W))
+  // TODO: matching UART data bit width... will have to parametrise for arbitrary length
+  val price = Input(UInt(8.W))
+  val size = Input(UInt(8.W))
 }
 
 class OrderBookInput extends DecoupledIO(new OrderBookInputBundle) {
 
 }
-
 
 class OrderBookInputBuffer extends Module {
   val io = IO(new Bundle() {
@@ -23,45 +23,35 @@ class OrderBookInputBuffer extends Module {
   })
 
   val isBid :: price :: size :: Nil = Enum(3)
-  val expectRxByte = RegInit(isBid)
+  val expectByte = RegInit(isBid)
 
-  // TODO: find out if registers are still neccessary after all conditions are filled out
+  val validReg = RegInit(false.B)
   val isBidReg = RegInit(false.B)
+  val priceReg = RegInit(0.U(8.W))
+  val sizeReg = RegInit(0.U(8.W))
 
-  io.input.valid := false.B
-
+  io.input.valid := validReg
   io.input.bits.isBid := isBidReg
-  io.input.bits.price := 0.U
-  io.input.bits.size := 0.U
-
-  val priceBytesReceived = Counter(7)
+  io.input.bits.price := priceReg
+  io.input.bits.size := sizeReg
 
   when(io.rxDataValid) {
-    switch(expectRxByte) {
+    switch(expectByte) {
       is(isBid) {
-        when(io.rxData === 0.U) {
-          isBidReg := true.B
-        } .otherwise {
-          isBidReg := false.B
-        }
-
-        expectRxByte := price
+        validReg := false.B
+        isBidReg := io.rxData
+        expectByte := price
       }
 
       is(price) {
-        when(priceBytesReceived.value === 0.U) {
-          io.input.bits.price := io.rxData
-        } .elsewhen(priceBytesReceived.value < 7.U) {
-          io.input.bits.price ## io.rxData
-        } .otherwise {
-          io.input.bits.price ## io.rxData
-          expectRxByte := size
-          priceBytesReceived.reset()
-        }
+        priceReg := io.rxData
+        expectByte := size
       }
 
       is(size) {
-        expectRxByte := isBid
+        sizeReg := io.rxData
+        expectByte := isBid
+        validReg := true.B
       }
     }
   }

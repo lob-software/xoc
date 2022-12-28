@@ -36,16 +36,15 @@ import chisel3._
 
 class OrderBook extends Module {
   val io = IO(new Bundle {
-    val input = Input(new OrderBookInput())
-
-    val bidPriceOut = Output(UInt(64.W))
-    val bidSizeOut = Output(UInt(64.W))
-
-    val askPriceOut = Output(UInt(64.W))
-    val askSizeOut = Output(UInt(64.W))
+    val input = Flipped(new OrderBookInput)
+    val output = new OrderBookOutput
   })
 
+  io.input.ready := true.B
+  io.output.valid := true.B
+
   val input = io.input.bits
+  val output = io.output.bits
 
   val currentBidPrice = RegInit(UInt(64.W), 0.U)
   val currentBidSize = RegInit(UInt(64.W), 0.U)
@@ -55,18 +54,18 @@ class OrderBook extends Module {
 
   val incomingBidBetter = input.isBid && input.price > currentBidPrice
   val incomingBidPriceTheSameAndSizeBigger = input.isBid && input.price === currentBidPrice && input.size > currentBidSize
-  io.bidPriceOut := Mux(incomingBidBetter, input.price, currentBidPrice)
-  io.bidSizeOut := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
+  output.bidPrice := Mux(incomingBidBetter, input.price, currentBidPrice)
+  output.bidSize := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
 
   val incomingAskBetter = !input.isBid && input.price < currentAskPrice
   val incomingAskPriceTheSameAndSizeBigger = !input.isBid && input.price === currentAskPrice && input.size > currentAskSize
-  io.askPriceOut := Mux(incomingAskBetter, input.price, currentAskPrice)
-  io.askSizeOut := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
+  output.askPrice := Mux(incomingAskBetter, input.price, currentAskPrice)
+  output.askSize := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
 
-  currentBidPrice := io.bidPriceOut
-  currentBidSize := io.bidSizeOut
-  currentAskPrice := io.askPriceOut
-  currentAskSize := io.askSizeOut
+  currentBidPrice := output.bidPrice
+  currentBidSize := output.bidSize
+  currentAskPrice := output.askPrice
+  currentAskSize := output.askSize
 
   val priceMatch = currentBidPrice >= currentAskPrice
 
@@ -74,14 +73,14 @@ class OrderBook extends Module {
     // match
     when (input.isBid) {
       // aggressive bid
-      io.bidPriceOut := 0.U
-      io.bidSizeOut := 0.U
-      io.askSizeOut := currentAskSize - input.size
+      output.bidPrice := 0.U
+      output.bidSize := 0.U
+      output.askSize := currentAskSize - input.size
     }.otherwise {
       // aggressive ask
-      io.askPriceOut := Long.MaxValue.U
-      io.askSizeOut := 0.U
-      io.bidSizeOut := currentBidSize - input.size
+      output.askPrice := Long.MaxValue.U
+      output.askSize := 0.U
+      output.bidSize := currentBidSize - input.size
     }
   }
 }

@@ -2,8 +2,8 @@ package io.xoc
 
 import Chisel.Module
 import chisel3._
-import io.xoc.core.OrderBookInputBuffer
-import io.xoc.uart.UartRx
+import io.xoc.core.{OrderBook, OrderBookInputBuffer}
+import io.xoc.uart.{UartRx, UartTx}
 
 class XOC extends Module {
   val io = IO(new Bundle() {
@@ -20,13 +20,22 @@ class XOC extends Module {
   // ready and valid interfacing with OrderBook (and with UART?)
 
   val uartRx = Module(new UartRx)
+  val uartTx = Module(new UartTx)
   val orderBookInputBuffer = Module(new OrderBookInputBuffer)
+  val orderBook = Module(new OrderBook)
 
-  // TODO can be a channel
+  // RX
+  uartRx.io.uartRx := io.rx
   orderBookInputBuffer.io.rxDataValid := uartRx.io.rxDataValid
   orderBookInputBuffer.io.rxData := uartRx.io.rxDataOut
+  orderBook.io.input <> orderBookInputBuffer.io.input
 
-
+  // TX
+  io.tx := uartTx.io.uartTx
+//  uartTx.io.txActive := orderBook.io.input.ready // TODO change
+  uartTx.io.txDataValid := orderBook.io.input.valid // TODO change
+  uartTx.io.txData := orderBook.io.output.bits.askSize // TODO change
+  orderBook.io.output.ready := true.B
 }
 
 object XOC extends App {
