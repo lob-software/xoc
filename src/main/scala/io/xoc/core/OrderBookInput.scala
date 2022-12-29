@@ -50,6 +50,7 @@ class OrderBookInputBuffer extends Module {
 
       is(size) {
         sizeReg := io.rxData
+        // TODO test the line below
         expectByte := isBid
         validReg := true.B
       }

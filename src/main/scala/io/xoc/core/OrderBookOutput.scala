@@ -22,26 +22,35 @@ class OrderBookOutputBuffer extends Module {
     val txData = Output(UInt(8.W))
   })
 
-  val output = io.output.bits
+  val orderBook = io.output.bits
   val bidPrice :: bidSize :: askPrice :: askSize :: Nil = Enum(4)
   val expectByte = RegInit(bidPrice)
 
   val validReg = RegInit(false.B)
-
-  val bidPriceReg = RegInit(0.U(8.W))
-  val bidSizeReg = RegInit(0.U(8.W))
-  val askPriceReg = RegInit(0.U(8.W))
-  val askSizeReg = RegInit(0.U(8.W))
+  val dataReg = RegInit(0.U(8.W))
 
   io.txDataValid := validReg
-  io.txData := 111.U
+  io.txData := dataReg
   io.output.ready := true.B
-//  output.bidPrice := bidPriceReg
-//  output.bidSize := bidSizeReg
-//  output.askPrice := askPriceReg
-//  output.askSize := askSizeReg
 
-//  when(io.output.)
+  switch(expectByte) {
+    is(bidPrice) {
+      dataReg := orderBook.bidPrice
+      expectByte := bidSize
+    }
+    is(bidSize) {
+      dataReg := orderBook.bidSize
+      expectByte := askPrice
+    }
+    is(askPrice) {
+      dataReg := orderBook.askPrice
+      expectByte := askSize
+    }
+    is(askSize) {
+      dataReg := orderBook.askSize
+      expectByte := bidPrice
+    }
+  }
 }
 
 object OrderBookOutputBuffer extends App {
