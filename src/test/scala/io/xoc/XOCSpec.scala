@@ -7,7 +7,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 
 class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
-  val CLKS_PER_BIT = 100
+  val CLKS_PER_BIT = 10
 
   private def clockSerial(xoc: XOC): Unit = {
     xoc.clock.step(CLKS_PER_BIT)
@@ -27,8 +27,31 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   "XOC" should "do its thing" in {
-    test(new XOC()) { xoc =>
-      xoc.io.rx.poke(true.B)
+    test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
+      xoc.clock.setTimeout(0)
+      xoc.io.rx.poke(1.U) // keep uart line high
+      clockSerial(xoc)
+
+      // bid
+      rxByte(xoc, 0.U)
+      rxByte(xoc, 131.U)
+      rxByte(xoc, 141.U)
+
+      // ask
+      rxByte(xoc, 1.U)
+      rxByte(xoc, 166.U)
+      rxByte(xoc, 222.U)
+
+      clockSerial(xoc)
+      clockSerial(xoc)
+      clockSerial(xoc)
+
+
+      clockSerial(xoc)
+      clockSerial(xoc)
+      clockSerial(xoc)
+
+
     }
   }
 }

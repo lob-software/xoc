@@ -2,10 +2,10 @@ package io.xoc
 
 import Chisel.Module
 import chisel3._
-import io.xoc.core.{OrderBook, OrderBookInputBuffer}
+import io.xoc.core.{OrderBook, OrderBookInputBuffer, OrderBookOutputBuffer}
 import io.xoc.uart.{UartRx, UartTx}
 
-class XOC extends Module {
+class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
   val io = IO(new Bundle() {
     val rx = Input(UInt(1.W))
     val tx = Output(UInt(1.W))
@@ -19,23 +19,31 @@ class XOC extends Module {
   // some kind of buffer
   // ready and valid interfacing with OrderBook (and with UART?)
 
-  val uartRx = Module(new UartRx)
-  val uartTx = Module(new UartTx)
+  val uartRx = Module(new UartRx(CLKS_PER_BIT))
+  val uartTx = Module(new UartTx(CLKS_PER_BIT))
   val orderBookInputBuffer = Module(new OrderBookInputBuffer)
+  val orderBookOutputBuffer = Module(new OrderBookOutputBuffer)
   val orderBook = Module(new OrderBook)
 
   // RX
+  val rxDataValid = WireDefault(false.B)
   uartRx.io.uartRx := io.rx
-  orderBookInputBuffer.io.rxDataValid := uartRx.io.rxDataValid
+  rxDataValid := uartRx.io.rxDataValid
+  orderBookInputBuffer.io.rxDataValid := rxDataValid
   orderBookInputBuffer.io.rxData := uartRx.io.rxDataOut
   orderBook.io.input <> orderBookInputBuffer.io.input
 
   // TX
-  io.tx := uartTx.io.uartTx
-//  uartTx.io.txActive := orderBook.io.input.ready // TODO change
-  uartTx.io.txDataValid := orderBook.io.input.valid // TODO change
-  uartTx.io.txData := orderBook.io.output.bits.askSize // TODO change
-  orderBook.io.output.ready := true.B
+  val txActive = WireDefault(false.B)
+  val txBit = WireDefault(false.B)
+  txActive := uartTx.io.txActive
+  txBit := uartTx.io.uartTx
+  io.tx := Mux(txActive, txBit, true.B)
+
+  uartTx.io.txDataValid := orderBookOutputBuffer.io.txDataValid
+  uartTx.io.txData := orderBookOutputBuffer.io.txData
+  orderBookOutputBuffer.io.output <> orderBook.io.output
+  orderBookOutputBuffer.io.txActive := txActive
 }
 
 object XOC extends App {

@@ -41,31 +41,34 @@ class OrderBook extends Module {
   })
 
   io.input.ready := true.B
-  io.output.valid := true.B
 
   val input = io.input.bits
   val output = io.output.bits
 
-  val currentBidPrice = RegInit(UInt(64.W), 0.U)
-  val currentBidSize = RegInit(UInt(64.W), 0.U)
+  val currentBidPrice = RegInit(UInt(8.W), 0.U)
+  val currentBidSize = RegInit(UInt(8.W), 0.U)
 
-  val currentAskPrice = RegInit(UInt(64.W), Long.MaxValue.U)
-  val currentAskSize = RegInit(UInt(64.W), 0.U)
+  val currentAskPrice = RegInit(UInt(8.W), 255.U)
+  val currentAskSize = RegInit(UInt(8.W), 0.U)
 
-  val incomingBidBetter = input.isBid && input.price > currentBidPrice
-  val incomingBidPriceTheSameAndSizeBigger = input.isBid && input.price === currentBidPrice && input.size > currentBidSize
-  output.bidPrice := Mux(incomingBidBetter, input.price, currentBidPrice)
-  output.bidSize := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
+  io.output.valid := currentBidPrice =/= 0.U & currentBidSize =/= 0.U & currentAskPrice =/= 255.U & currentAskSize =/= 0.U
 
-  val incomingAskBetter = !input.isBid && input.price < currentAskPrice
-  val incomingAskPriceTheSameAndSizeBigger = !input.isBid && input.price === currentAskPrice && input.size > currentAskSize
-  output.askPrice := Mux(incomingAskBetter, input.price, currentAskPrice)
-  output.askSize := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
+  when(io.input.valid) {
+    val incomingBidBetter = input.isBid && input.price > currentBidPrice
+    val incomingBidPriceTheSameAndSizeBigger = input.isBid && input.price === currentBidPrice && input.size > currentBidSize
+    currentBidPrice := Mux(incomingBidBetter, input.price, currentBidPrice)
+    currentBidSize := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
 
-  currentBidPrice := output.bidPrice
-  currentBidSize := output.bidSize
-  currentAskPrice := output.askPrice
-  currentAskSize := output.askSize
+    val incomingAskBetter = !input.isBid && input.price < currentAskPrice
+    val incomingAskPriceTheSameAndSizeBigger = !input.isBid && input.price === currentAskPrice && input.size > currentAskSize
+    currentAskPrice := Mux(incomingAskBetter, input.price, currentAskPrice)
+    currentAskSize := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
+  }
+
+  output.bidPrice := currentBidPrice
+  output.bidSize := currentBidSize
+  output.askPrice := currentAskPrice
+  output.askSize := currentAskSize
 
   val priceMatch = currentBidPrice >= currentAskPrice
 

@@ -22,7 +22,7 @@ class UartTx(CLKS_PER_BIT: Int = 10417) extends Module {
     val txDataIdx = RegInit(0.U(3.W))
     val txData = RegInit(0.U(8.W))
 
-    io.txActive := true.B
+    io.txActive := false.B
     io.uartTx := false.B
 
     switch(txState) {

@@ -18,37 +18,41 @@ class OrderBookOutput extends DecoupledIO(new OrderBookOutputBundle) {
 class OrderBookOutputBuffer extends Module {
   val io = IO(new Bundle() {
     val output = Flipped(new OrderBookOutput)
-    val txDataValid = Output(Bool())
     val txData = Output(UInt(8.W))
+    val txDataValid = Output(Bool())
+    val txActive = Input(Bool())
   })
 
   val orderBook = io.output.bits
   val bidPrice :: bidSize :: askPrice :: askSize :: Nil = Enum(4)
   val expectByte = RegInit(bidPrice)
 
-  val validReg = RegInit(false.B)
+  val validReg = RegInit(true.B)
   val dataReg = RegInit(0.U(8.W))
 
   io.txDataValid := validReg
   io.txData := dataReg
-  io.output.ready := true.B
+  // TODO make use of or remove
+  io.output.ready := validReg
 
-  switch(expectByte) {
-    is(bidPrice) {
-      dataReg := orderBook.bidPrice
-      expectByte := bidSize
-    }
-    is(bidSize) {
-      dataReg := orderBook.bidSize
-      expectByte := askPrice
-    }
-    is(askPrice) {
-      dataReg := orderBook.askPrice
-      expectByte := askSize
-    }
-    is(askSize) {
-      dataReg := orderBook.askSize
-      expectByte := bidPrice
+  when(io.output.valid && !io.txActive) {
+    switch(expectByte) {
+      is(bidPrice) {
+        dataReg := orderBook.bidPrice
+        expectByte := bidSize
+      }
+      is(bidSize) {
+        dataReg := orderBook.bidSize
+        expectByte := askPrice
+      }
+      is(askPrice) {
+        dataReg := orderBook.askPrice
+        expectByte := askSize
+      }
+      is(askSize) {
+        dataReg := orderBook.askSize
+        expectByte := bidPrice
+      }
     }
   }
 }

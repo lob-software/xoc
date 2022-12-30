@@ -39,7 +39,7 @@ class OrderBookInputBuffer extends Module {
     switch(expectByte) {
       is(isBid) {
         validReg := false.B
-        isBidReg := io.rxData
+        isBidReg := io.rxData === 0.U
         expectByte := price
       }
 
