@@ -9,6 +9,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
 
   def bid(ob: OrderBook, price: Int, size: Int): Unit = {
+    ob.io.input.valid.poke(true)
     val input = ob.io.input.bits
 
     input.isBid.poke(true)
@@ -18,6 +19,7 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   def ask(ob: OrderBook, price: Int, size: Int): Unit = {
+    ob.io.input.valid.poke(true)
     val input = ob.io.input.bits
 
     input.isBid.poke(false)
@@ -28,6 +30,8 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
 
   "OrderBook" should "initialize prices and sizes to 0" in {
     test(new OrderBook()) { ob =>
+      ob.io.input.valid.poke(true)
+
       ob.io.output.bits.bidPrice.expect(0)
       ob.io.output.bits.bidSize.expect(0)
 

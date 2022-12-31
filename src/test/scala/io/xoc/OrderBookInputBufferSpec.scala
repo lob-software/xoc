@@ -12,7 +12,7 @@ class OrderBookInputBufferSpec extends AnyFlatSpec with ChiselScalatestTester {
     test(new OrderBookInputBuffer()) { obi =>
       obi.io.rxDataValid.poke(true)
 
-      val side = true.B
+      val side = "b00000000".U
       obi.io.rxData.poke(side)
       obi.clock.step()
       obi.io.input.valid.expect(false.B)

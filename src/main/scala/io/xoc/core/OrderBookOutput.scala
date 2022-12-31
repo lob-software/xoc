@@ -27,15 +27,18 @@ class OrderBookOutputBuffer extends Module {
   val bidPrice :: bidSize :: askPrice :: askSize :: Nil = Enum(4)
   val expectByte = RegInit(bidPrice)
 
-  val validReg = RegInit(true.B)
+  val validReg = RegInit(false.B)
   val dataReg = RegInit(0.U(8.W))
 
   io.txDataValid := validReg
   io.txData := dataReg
-  // TODO make use of or remove
-  io.output.ready := validReg
+
+  io.output.ready := true.B
 
   when(io.output.valid && !io.txActive) {
+
+    validReg := true.B
+
     switch(expectByte) {
       is(bidPrice) {
         dataReg := orderBook.bidPrice
@@ -52,6 +55,7 @@ class OrderBookOutputBuffer extends Module {
       is(askSize) {
         dataReg := orderBook.askSize
         expectByte := bidPrice
+        validReg := false.B
       }
     }
   }

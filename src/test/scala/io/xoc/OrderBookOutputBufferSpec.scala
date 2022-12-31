@@ -16,6 +16,7 @@ class OrderBookOutputBufferSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   private def assertOutput(obo: OrderBookOutputBuffer, bidPrice: Int, bidSize: Int, askPrice: Int, askSize: Int): Unit = {
+    obo.io.output.valid.poke(true)
     obo.io.output.bits.bidPrice.poke(bidPrice.U)
     obo.io.output.bits.bidSize.poke(bidSize.U)
     obo.io.output.bits.askPrice.poke(askPrice.U)
