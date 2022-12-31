@@ -21,7 +21,6 @@ class UartTxSpec extends AnyFlatSpec with ChiselScalatestTester {
       tx.io.txDataValid.poke(true.B)
       tx.io.txData.poke("b00101001".U)
       tx.io.uartTx.expect(true.B)
-      tx.io.txActive.expect(true.B)
       tx.clock.step()
 
       // start bit
@@ -68,6 +67,7 @@ class UartTxSpec extends AnyFlatSpec with ChiselScalatestTester {
       tx.clock.step()
       tx.io.uartTx.expect(true.B)
 
+      tx.clock.step()
       tx.clock.step()
       tx.clock.step()
       tx.io.txActive.expect(false.B)

@@ -21,8 +21,9 @@ class UartTx(CLKS_PER_BIT: Int = 10417) extends Module {
     val txState = RegInit(idle)
     val txDataIdx = RegInit(0.U(3.W))
     val txData = RegInit(0.U(8.W))
+    val txActive = RegInit(false.B)
 
-    io.txActive := true.B
+    io.txActive := txActive
     io.uartTx := false.B
 
     switch(txState) {
@@ -33,7 +34,7 @@ class UartTx(CLKS_PER_BIT: Int = 10417) extends Module {
         txDataIdx := 0.U
 
         when(io.txDataValid) {
-          io.txActive := true.B
+          txActive := true.B
           txData := io.txData
           txState := start
         }.otherwise {
@@ -84,7 +85,7 @@ class UartTx(CLKS_PER_BIT: Int = 10417) extends Module {
         }.otherwise {
           count.reset()
           txState := idle
-          io.txActive := false.B
+          txActive := false.B
         }
       }
     }

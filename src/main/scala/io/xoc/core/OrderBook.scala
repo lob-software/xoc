@@ -51,7 +51,8 @@ class OrderBook extends Module {
   val currentAskPrice = RegInit(UInt(8.W), 255.U)
   val currentAskSize = RegInit(UInt(8.W), 0.U)
 
-  io.output.valid := currentBidPrice =/= 0.U & currentBidSize =/= 0.U & currentAskPrice =/= 255.U & currentAskSize =/= 0.U
+  val orderBookDataValid = currentBidPrice =/= 0.U & currentBidSize =/= 0.U & currentAskPrice =/= 255.U & currentAskSize =/= 0.U
+  io.output.valid := orderBookDataValid
 
   when(io.input.valid) {
     val incomingBidBetter = input.isBid && input.price > currentBidPrice
