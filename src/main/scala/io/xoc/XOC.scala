@@ -2,7 +2,7 @@ package io.xoc
 
 import Chisel.Module
 import chisel3._
-import io.xoc.core.{OrderBook, OrderBookInputBuffer, OrderBookOutputBuffer}
+import io.xoc.core.{OrderBook, OrderBookInput, OrderBookInputBuffer, OrderBookOutput, OrderBookOutputBuffer}
 import io.xoc.uart.{UartRx, UartTx}
 
 class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
@@ -21,8 +21,8 @@ class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
 
   val uartRx = Module(new UartRx(CLKS_PER_BIT))
   val uartTx = Module(new UartTx(CLKS_PER_BIT))
-  val orderBookInputBuffer = Module(new OrderBookInputBuffer)
-  val orderBookOutputBuffer = Module(new OrderBookOutputBuffer)
+  val orderBookInputBuffer = Module(new OrderBookInput)
+  val orderBookOutputBuffer = Module(new OrderBookOutput)
   val orderBook = Module(new OrderBook)
 
   // RX

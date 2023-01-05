@@ -11,13 +11,9 @@ class OrderBookInputBundle extends Bundle {
   val size = Input(UInt(8.W))
 }
 
-class OrderBookInput extends DecoupledIO(new OrderBookInputBundle) {
-
-}
-
-class OrderBookInputBuffer extends Module {
+class OrderBookInput extends Module {
   val io = IO(new Bundle() {
-    val input = new OrderBookInput()
+    val input = DecoupledIO(new OrderBookInputBundle())
     val rxDataValid = Input(Bool())
     val rxData = Input(UInt(8.W))
   })
@@ -59,7 +55,7 @@ class OrderBookInputBuffer extends Module {
 }
 
 object OrderBookInputBuffer extends App {
-  emitVerilog(new OrderBookInputBuffer(), Array(
+  emitVerilog(new OrderBookInput(), Array(
     "--target-dir", "generated",
     "--emission-options=disableMemRandomization,disableRegisterRandomization"
   ))

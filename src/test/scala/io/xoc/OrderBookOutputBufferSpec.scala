@@ -2,20 +2,20 @@ package io.xoc
 
 import chisel3._
 import chiseltest._
-import io.xoc.core.OrderBookOutputBuffer
+import io.xoc.core.{OrderBookOutput, OrderBookOutputBuffer}
 import org.scalatest.flatspec.AnyFlatSpec
 
 
 class OrderBookOutputBufferSpec extends AnyFlatSpec with ChiselScalatestTester {
 
   "OrderBookOutputBuffer" should "buffer data" in {
-    test(new OrderBookOutputBuffer()) { obo =>
+    test(new OrderBookOutput()) { obo =>
       assertOutput(obo, 111, 121, 144, 211)
       assertOutput(obo, 222, 111, 11, 43)
     }
   }
 
-  private def assertOutput(obo: OrderBookOutputBuffer, bidPrice: Int, bidSize: Int, askPrice: Int, askSize: Int): Unit = {
+  private def assertOutput(obo: OrderBookOutput, bidPrice: Int, bidSize: Int, askPrice: Int, askSize: Int): Unit = {
     obo.io.output.valid.poke(true)
     obo.io.output.bits.bidPrice.poke(bidPrice.U)
     obo.io.output.bits.bidSize.poke(bidSize.U)

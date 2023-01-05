@@ -1,26 +1,26 @@
 package io.xoc.core
 
-import Chisel.DecoupledIO
 import chisel3._
+import chisel3.util._
 
 
 /**
  * Open questions:
  * 1. How deep and how wide should the order book be?
  *   - Can sizing be dynamic?
- * 2. What's the protocol for commands:
- *  Place order:
+ *     2. What's the protocol for commands:
+ *     Place order:
  *    - in:
  *    - out:
- *  Cancel order:
+ *      Cancel order:
  *    - in:
  *    - out:
- * 3. How to make sure that the same command is only consumed by the module once?
+ *      3. How to make sure that the same command is only consumed by the module once?
  *    - ready and valid flags?
- * 4. Which data structures should be used for:
+ *      4. Which data structures should be used for:
  *    - Orders
  *    - Price levels. Sorting of price levels and also storing of orders pertaining to price levels
- * 5. How will the data be communicated to the module?
+ *      5. How will the data be communicated to the module?
  *    - UART?
  *    - Wishbone?
  *    - Something custom?
@@ -36,8 +36,8 @@ import chisel3._
 
 class OrderBook extends Module {
   val io = IO(new Bundle {
-    val input = Flipped(new OrderBookInput)
-    val output = new OrderBookOutput
+    val input = Flipped(DecoupledIO(new OrderBookInputBundle))
+    val output = DecoupledIO(new OrderBookOutputBundle)
   })
 
   io.input.ready := true.B
@@ -73,9 +73,9 @@ class OrderBook extends Module {
 
   val priceMatch = currentBidPrice >= currentAskPrice
 
-  when (priceMatch) {
+  when(priceMatch) {
     // match
-    when (input.isBid) {
+    when(input.isBid) {
       // aggressive bid
       output.bidPrice := 0.U
       output.bidSize := 0.U

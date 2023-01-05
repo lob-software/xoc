@@ -2,14 +2,14 @@ package io.xoc
 
 import chisel3._
 import chiseltest._
-import io.xoc.core.OrderBookInputBuffer
+import io.xoc.core.{OrderBookInput, OrderBookInputBuffer}
 import org.scalatest.flatspec.AnyFlatSpec
 
 
 class OrderBookInputBufferSpec extends AnyFlatSpec with ChiselScalatestTester {
 
   "OrderBookInputBuffer" should "buffer data" in {
-    test(new OrderBookInputBuffer()) { obi =>
+    test(new OrderBookInput()) { obi =>
       obi.io.rxDataValid.poke(true)
 
       val side = "b00000000".U
