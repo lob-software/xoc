@@ -51,6 +51,8 @@ class OrderBookInput extends Module {
         validReg := true.B
       }
     }
+  } .otherwise {
+    validReg := false.B
   }
 }
 

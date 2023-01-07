@@ -38,6 +38,7 @@ class OrderBook extends Module {
   val io = IO(new Bundle {
     val input = Flipped(DecoupledIO(new OrderBookInputBundle))
     val output = DecoupledIO(new OrderBookOutputBundle)
+    val validSeq = Output(UInt(8.W))
   })
 
   io.input.ready := true.B
@@ -51,8 +52,18 @@ class OrderBook extends Module {
   val currentAskPrice = RegInit(UInt(8.W), 255.U)
   val currentAskSize = RegInit(UInt(8.W), 0.U)
 
+  val validSeq = Counter(Byte.MaxValue)
+  io.validSeq := validSeq.value
+
+  val inputValidDelayed = RegNext(false.B)
+  inputValidDelayed := io.input.valid
   val orderBookDataValid = currentBidPrice =/= 0.U & currentBidSize =/= 0.U & currentAskPrice =/= 255.U & currentAskSize =/= 0.U
-  io.output.valid := orderBookDataValid
+
+  when(inputValidDelayed && orderBookDataValid) {
+    validSeq.inc()
+  }
+
+  io.output.valid := true.B
 
   when(io.input.valid) {
     val incomingBidBetter = input.isBid && input.price > currentBidPrice

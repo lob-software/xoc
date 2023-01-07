@@ -2,7 +2,7 @@ package io.xoc
 
 import Chisel.Module
 import chisel3._
-import io.xoc.core.{OrderBook, OrderBookInput, OrderBookInputBuffer, OrderBookOutput, OrderBookOutputBuffer}
+import io.xoc.core.{Buffer, OrderBook, OrderBookInput, OrderBookInputBuffer, OrderBookOutput, OrderBookOutputBuffer}
 import io.xoc.uart.{UartRx, UartTx}
 
 class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
@@ -21,29 +21,35 @@ class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
 
   val uartRx = Module(new UartRx(CLKS_PER_BIT))
   val uartTx = Module(new UartTx(CLKS_PER_BIT))
-  val orderBookInputBuffer = Module(new OrderBookInput)
-  val orderBookOutputBuffer = Module(new OrderBookOutput)
+  val orderBookInput = Module(new OrderBookInput)
+  val orderBookOutput = Module(new OrderBookOutput)
+  val outputBuffer = Module(new Buffer)
   val orderBook = Module(new OrderBook)
 
   // RX
+  val validSeq = WireDefault(0.U(8.W))
   val rxDataValid = WireDefault(false.B)
   uartRx.io.uartRx := io.rx
   rxDataValid := uartRx.io.rxDataValid
-  orderBookInputBuffer.io.rxDataValid := rxDataValid
-  orderBookInputBuffer.io.rxData := uartRx.io.rxDataOut
-  orderBook.io.input <> orderBookInputBuffer.io.input
+  orderBookInput.io.rxDataValid := rxDataValid
+  orderBookInput.io.rxData := uartRx.io.rxDataOut
+  orderBook.io.input <> orderBookInput.io.input
+  validSeq := orderBook.io.validSeq
 
   // TX
   val txActive = WireDefault(false.B)
   val txBit = WireDefault(false.B)
+
   txActive := uartTx.io.txActive
   txBit := uartTx.io.uartTx
   io.tx := Mux(txActive, txBit, true.B)
 
-  uartTx.io.txDataValid := orderBookOutputBuffer.io.txDataValid
-  uartTx.io.txData := orderBookOutputBuffer.io.txData
-  orderBookOutputBuffer.io.output <> orderBook.io.output
-  orderBookOutputBuffer.io.txActive := txActive
+  orderBookOutput.io.output <> orderBook.io.output
+  orderBookOutput.io.validSeq := validSeq
+  orderBookOutput.io.uart <> outputBuffer.io.in
+  uartTx.io.txDataValid := outputBuffer.io.out.valid
+  uartTx.io.txData := outputBuffer.io.out.bits
+  outputBuffer.io.out.ready := !txActive
 }
 
 object XOC extends App {
