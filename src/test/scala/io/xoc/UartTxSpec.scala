@@ -19,58 +19,40 @@ class UartTxSpec extends AnyFlatSpec with ChiselScalatestTester {
       tx.clock.setTimeout(0)
 
       tx.io.txDataValid.poke(true.B)
-      tx.io.txData.poke("b00101001".U)
-      tx.io.uartTx.expect(true.B)
-      tx.clock.step()
 
-      // start bit
-      tx.io.uartTx.expect(false.B)
-      tx.io.txActive.expect(true.B)
+      assertByteTransmitted(tx, "b00101001".U)
+      assertByteTransmitted(tx, "b01001111".U)
+      assertByteTransmitted(tx, "b11111111".U)
+      assertByteTransmitted(tx, "b00000000".U)
+    }
+  }
 
+  private def assertByteTransmitted(tx: UartTx, byte: UInt): Unit = {
+    tx.io.txData.poke(byte)
+    tx.io.uartTx.expect(true.B)
+    tx.clock.step()
 
+    // start bit
+    tx.io.uartTx.expect(false.B)
+    tx.io.txActive.expect(true.B)
+
+    byte.asBools.padTo(8, false.B).foreach(b => {
       // data
       clockSerial(tx)
-      tx.io.uartTx.expect(true.B)
+      tx.io.uartTx.expect(b)
       tx.io.txActive.expect(true.B)
+    })
 
-      clockSerial(tx)
-      tx.io.uartTx.expect(false.B)
-      tx.io.txActive.expect(true.B)
+    // last < 7 check cycle in state == data
+    clockSerial(tx)
 
-      clockSerial(tx)
-      tx.io.uartTx.expect(false.B)
-      tx.io.txActive.expect(true.B)
+    // stop bit
+    tx.clock.step()
+    tx.io.uartTx.expect(true.B)
 
-      clockSerial(tx)
-      tx.io.uartTx.expect(true.B)
-      tx.io.txActive.expect(true.B)
-
-      clockSerial(tx)
-      tx.io.uartTx.expect(false.B)
-      tx.io.txActive.expect(true.B)
-
-      clockSerial(tx)
-      tx.io.uartTx.expect(true.B)
-      tx.io.txActive.expect(true.B)
-
-      clockSerial(tx)
-      tx.io.uartTx.expect(false.B)
-      tx.io.txActive.expect(true.B)
-
-      clockSerial(tx)
-      tx.io.uartTx.expect(false.B)
-      tx.io.txActive.expect(true.B)
-      // last < 7 check cycle in state == data
-      clockSerial(tx)
-
-      // stop bit
-      tx.clock.step()
-      tx.io.uartTx.expect(true.B)
-
-      tx.clock.step()
-      tx.clock.step()
-      tx.clock.step()
-      tx.io.txActive.expect(false.B)
-    }
+    tx.clock.step()
+    tx.clock.step()
+    tx.clock.step()
+    tx.io.txActive.expect(false.B)
   }
 }

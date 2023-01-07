@@ -20,11 +20,11 @@ class UartRxSpec extends AnyFlatSpec with ChiselScalatestTester {
       clockSerial(rx)
 
       val expectedBytes = Seq(
-//        "b00000000".U,
+        "b00000000".U,
         "b10101001".U,
-//        "b01101000".U,
-//        "b10001111".U,
-//        "b11111111".U,
+        "b01101000".U,
+        "b10001111".U,
+        "b11111111".U,
       )
 
       expectedBytes.foreach(expectedByte => assertByteReceived(rx, expectedByte))
