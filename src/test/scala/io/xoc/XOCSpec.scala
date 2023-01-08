@@ -45,7 +45,7 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
     clockSerial(xoc)
   }
 
-  "XOC" should "do its thing" in {
+  "XOC" should "work" in {
     test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
       xoc.clock.setTimeout(0)
       xoc.io.rx.poke(1.U) // keep uart line high
