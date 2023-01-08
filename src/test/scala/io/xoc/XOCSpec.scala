@@ -26,6 +26,25 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
     clockSerial(xoc)
   }
 
+  private def assertByteTransmitted(xoc: XOC, byte: UInt): Unit = {
+    // start bit
+    xoc.io.tx.expect(false.B)
+
+    byte.asBools.padTo(8, false.B).foreach(b => {
+      // data
+      clockSerial(xoc)
+      //      println(xoc.io.tx.peek() + " | " + b)
+      xoc.io.tx.expect(b)
+    })
+
+    // last < 7 check cycle in state == data
+    clockSerial(xoc)
+
+    // stop bit
+    xoc.io.tx.expect(true.B)
+    clockSerial(xoc)
+  }
+
   "XOC" should "do its thing" in {
     test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
       xoc.clock.setTimeout(0)
@@ -42,41 +61,7 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
       rxByte(xoc, 166.U)
       rxByte(xoc, 222.U)
 
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-
-
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
+      // TODO: why all the clocks ??
       clockSerial(xoc)
       clockSerial(xoc)
       clockSerial(xoc)
@@ -89,40 +74,13 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
       clockSerial(xoc)
       clockSerial(xoc)
 
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
-      clockSerial(xoc)
+      // bid side
+      assertByteTransmitted(xoc, 131.U)
+      assertByteTransmitted(xoc, 141.U)
 
-
+      // ask side
+      assertByteTransmitted(xoc, 166.U)
+      assertByteTransmitted(xoc, 222.U)
     }
   }
 }
