@@ -8,23 +8,27 @@ class UartEcho(CLKS_PER_BIT: Int = 10417) extends Module {
     val uartTx = Output(Bool())
   })
 
-  val rxDataValid = WireDefault(false.B)
-  val txActive = WireDefault(false.B)
-  val uartTx = WireDefault(false.B)
-  val rxData = WireDefault(0.U(8.W))
+  private val disabledReset: Bool = false.B
 
-  val rx = Module(new UartRx(CLKS_PER_BIT))
-  rx.io.uartRx := io.uartRx
-  rxDataValid := rx.io.rxDataValid
-  rxData := rx.io.rxDataOut
+  withClockAndReset(clock, disabledReset) {
+    val rxDataValid = WireDefault(false.B)
+    val txActive = WireDefault(false.B)
+    val uartTx = WireDefault(false.B)
+    val rxData = WireDefault(0.U(8.W))
 
-  val tx = Module(new UartTx(CLKS_PER_BIT))
-  tx.io.txDataValid := rxDataValid
-  tx.io.txData := rxData
-  txActive := tx.io.txActive
-  uartTx := tx.io.uartTx
+    val rx = Module(new UartRx(CLKS_PER_BIT))
+    rx.io.uartRx := io.uartRx
+    rxDataValid := rx.io.rxDataValid
+    rxData := rx.io.rxDataOut
 
-  io.uartTx := Mux(txActive, uartTx, true.B)
+    val tx = Module(new UartTx(CLKS_PER_BIT))
+    tx.io.txDataValid := rxDataValid
+    tx.io.txData := rxData
+    txActive := tx.io.txActive
+    uartTx := tx.io.uartTx
+
+    io.uartTx := Mux(txActive, uartTx, true.B)
+  }
 }
 
 

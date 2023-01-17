@@ -12,81 +12,76 @@ class UartTx(CLKS_PER_BIT: Int = 10417) extends Module {
     val uartTx = Output(Bool())
   })
 
-  private val disabledReset: Bool = false.B
+  val count = Counter(CLKS_PER_BIT)
+  val idle :: start :: data :: stop :: Nil = Enum(4)
+  val txState = RegInit(idle)
+  val txDataIdx = RegInit(0.U(3.W))
+  val txData = RegInit(0.U(8.W))
+  val txActive = RegInit(false.B)
 
-  withClockAndReset(clock, disabledReset) {
+  io.txActive := txActive
+  io.uartTx := false.B
 
-    val count = Counter(CLKS_PER_BIT)
-    val idle :: start :: data :: stop :: Nil = Enum(4)
-    val txState = RegInit(idle)
-    val txDataIdx = RegInit(0.U(3.W))
-    val txData = RegInit(0.U(8.W))
-    val txActive = RegInit(false.B)
+  switch(txState) {
 
-    io.txActive := txActive
-    io.uartTx := false.B
+    is(idle) {
+      io.uartTx := true.B
+      count.reset()
+      txDataIdx := 0.U
 
-    switch(txState) {
+      when(io.txDataValid) {
+        txActive := true.B
+        txData := io.txData
+        txState := start
+      }.otherwise {
+        txState := idle
+      }
+    }
 
-      is(idle) {
-        io.uartTx := true.B
+    is(start) {
+      // start bit
+      io.uartTx := false.B
+
+      when(count.value < (CLKS_PER_BIT - 1).U) {
+        count.inc()
+        txState := start
+      }.otherwise {
         count.reset()
-        txDataIdx := 0.U
-
-        when(io.txDataValid) {
-          txActive := true.B
-          txData := io.txData
-          txState := start
-        }.otherwise {
-          txState := idle
-        }
+        txState := data
       }
+    }
 
-      is(start) {
-        // start bit
-        io.uartTx := false.B
+    is(data) {
 
-        when(count.value < (CLKS_PER_BIT - 1).U) {
-          count.inc()
-          txState := start
-        }.otherwise {
-          count.reset()
-          txState := data
-        }
-      }
+      io.uartTx := txData(txDataIdx)
 
-      is(data) {
+      when(count.value < (CLKS_PER_BIT - 1).U) {
+        count.inc()
+        txState := data
+      }.otherwise {
+        count.reset()
 
-        io.uartTx := txData(txDataIdx)
-
-        when(count.value < (CLKS_PER_BIT - 1).U) {
-          count.inc()
+        when(txDataIdx < 7.U) {
+          txDataIdx := txDataIdx + 1.U
           txState := data
         }.otherwise {
-          count.reset()
-
-          when(txDataIdx < 7.U) {
-            txDataIdx := txDataIdx + 1.U
-            txState := data
-          }.otherwise {
-            txDataIdx := 0.U
-            txState := stop
-          }
-        }
-      }
-
-      is(stop) {
-        // stop bit
-        io.uartTx := true.B
-
-        when(count.value < (CLKS_PER_BIT - 1).U) {
-          count.inc()
+          txDataIdx := 0.U
           txState := stop
-        }.otherwise {
-          count.reset()
-          txState := idle
-          txActive := false.B
         }
+      }
+    }
+
+    is(stop) {
+      // stop bit
+      io.uartTx := true.B
+
+      when(count.value < (CLKS_PER_BIT - 1).U) {
+        count.inc()
+        txState := stop
+      }.otherwise {
+        count.reset()
+        txState := idle
+        txActive := false.B
       }
     }
   }

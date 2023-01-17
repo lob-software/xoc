@@ -11,83 +11,78 @@ class UartRx(CLKS_PER_BIT: Int = 10417) extends Module {
     val rxDataOut = Output(UInt(8.W))
   })
 
-  private val disabledReset: Bool = false.B
+  val count = Counter(CLKS_PER_BIT)
+  val idle :: start :: data :: stop :: cleanup :: Nil = Enum(5)
+  val rxState = RegInit(idle)
+  val rxDataValid = RegInit(false.B)
+  val rxData = RegInit(0.U(8.W))
+  val rxDataIdx = RegInit(0.U(3.W))
 
-  withClockAndReset(clock, disabledReset) {
+  switch(rxState) {
+    is(idle) {
 
-    val count = Counter(CLKS_PER_BIT)
-    val idle :: start :: data :: stop :: cleanup :: Nil = Enum(5)
-    val rxState = RegInit(idle)
-    val rxDataValid = RegInit(false.B)
-    val rxData = RegInit(0.U(8.W))
-    val rxDataIdx = RegInit(0.U(3.W))
+      count.reset()
+      rxDataValid := false.B
+      rxDataIdx := 0.U
 
-    switch(rxState) {
-      is(idle) {
-
-        count.reset()
-        rxDataValid := false.B
-        rxDataIdx := 0.U
-
-        when(!io.uartRx) {
-          rxState := start
-        }.otherwise {
-          rxState := idle
-        }
-      }
-
-      is(start) {
-        when(count.value === ((CLKS_PER_BIT - 1) / 2).U) {
-          when(!io.uartRx) {
-            count.reset()
-            rxState := data
-          }.otherwise {
-            rxState := idle
-          }
-        }.otherwise {
-          count.inc()
-          rxState := start
-        }
-      }
-
-      is(data) {
-        when(count.value < (CLKS_PER_BIT - 1).U) {
-          count.inc()
-          rxState := data
-        }.otherwise {
-          count.reset()
-          rxData := rxData.bitSet(rxDataIdx, io.uartRx)
-
-          when(rxDataIdx < 7.U) {
-            rxDataIdx := rxDataIdx + 1.U
-            rxState := data
-          }.otherwise {
-            rxDataIdx := 0.U
-            rxState := stop
-          }
-        }
-      }
-
-      is(stop) {
-        when(count.value < (CLKS_PER_BIT - 1).U) {
-          count.inc()
-          rxState := stop
-        }.otherwise {
-          rxDataValid := true.B
-          count.reset()
-          rxState := cleanup
-        }
-      }
-
-      is(cleanup) {
-        rxDataValid := false.B
+      when(!io.uartRx) {
+        rxState := start
+      }.otherwise {
         rxState := idle
       }
     }
 
-    io.rxDataValid := rxDataValid
-    io.rxDataOut := rxData
+    is(start) {
+      when(count.value === ((CLKS_PER_BIT - 1) / 2).U) {
+        when(!io.uartRx) {
+          count.reset()
+          rxState := data
+        }.otherwise {
+          rxState := idle
+        }
+      }.otherwise {
+        count.inc()
+        rxState := start
+      }
+    }
+
+    is(data) {
+      when(count.value < (CLKS_PER_BIT - 1).U) {
+        count.inc()
+        rxState := data
+      }.otherwise {
+        count.reset()
+        rxData := rxData.bitSet(rxDataIdx, io.uartRx)
+
+        when(rxDataIdx < 7.U) {
+          rxDataIdx := rxDataIdx + 1.U
+          rxState := data
+        }.otherwise {
+          rxDataIdx := 0.U
+          rxState := stop
+        }
+      }
+    }
+
+    is(stop) {
+      when(count.value < (CLKS_PER_BIT - 1).U) {
+        count.inc()
+        rxState := stop
+      }.otherwise {
+        rxDataValid := true.B
+        count.reset()
+        rxState := cleanup
+      }
+    }
+
+    is(cleanup) {
+      rxDataValid := false.B
+      rxState := idle
+    }
   }
+
+  io.rxDataValid := rxDataValid
+  io.rxDataOut := rxData
 }
 
 object UartRx extends App {
