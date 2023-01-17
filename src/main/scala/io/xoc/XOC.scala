@@ -7,8 +7,8 @@ import io.xoc.uart.{UartRx, UartTx}
 
 class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
   val io = IO(new Bundle() {
-    val rx = Input(UInt(1.W))
-    val tx = Output(UInt(1.W))
+    val uartRx = Input(Bool())
+    val uartTx = Output(Bool())
   })
 
   // RX transformation: rx -> OrderBookInput
@@ -29,7 +29,7 @@ class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
   // RX
   val validSeq = WireDefault(0.U(8.W))
   val rxDataValid = WireDefault(false.B)
-  uartRx.io.uartRx := io.rx
+  uartRx.io.uartRx := io.uartRx
   rxDataValid := uartRx.io.rxDataValid
   orderBookInput.io.rxDataValid := rxDataValid
   orderBookInput.io.rxData := uartRx.io.rxDataOut
@@ -42,7 +42,7 @@ class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
 
   txActive := uartTx.io.txActive
   txBit := uartTx.io.uartTx
-  io.tx := Mux(txActive, txBit, true.B)
+  io.uartTx := Mux(txActive, txBit, true.B)
 
   orderBookOutput.io.output <> orderBook.io.output
   orderBookOutput.io.validSeq := validSeq

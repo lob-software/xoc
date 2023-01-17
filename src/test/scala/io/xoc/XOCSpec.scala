@@ -14,41 +14,41 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   private def rxByte(xoc: XOC, byte: UInt): Unit = {
-    xoc.io.rx.poke(0.U) // start bit
+    xoc.io.uartRx.poke(0.U) // start bit
     clockSerial(xoc)
 
     byte.asBools.padTo(8, false.B).foreach(b => {
-      xoc.io.rx.poke(b)
+      xoc.io.uartRx.poke(b)
       clockSerial(xoc)
     })
 
-    xoc.io.rx.poke(1.U) // stop bit
+    xoc.io.uartRx.poke(1.U) // stop bit
     clockSerial(xoc)
   }
 
   private def assertByteTransmitted(xoc: XOC, byte: UInt): Unit = {
     // start bit
-    xoc.io.tx.expect(false.B)
+    xoc.io.uartTx.expect(false.B)
 
     byte.asBools.padTo(8, false.B).foreach(b => {
       // data
       clockSerial(xoc)
       //      println(xoc.io.tx.peek() + " | " + b)
-      xoc.io.tx.expect(b)
+      xoc.io.uartTx.expect(b)
     })
 
     // last < 7 check cycle in state == data
     clockSerial(xoc)
 
     // stop bit
-    xoc.io.tx.expect(true.B)
+    xoc.io.uartTx.expect(true.B)
     clockSerial(xoc)
   }
 
   "XOC" should "work" in {
     test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
       xoc.clock.setTimeout(0)
-      xoc.io.rx.poke(1.U) // keep uart line high
+      xoc.io.uartRx.poke(1.U) // keep uart line high
       clockSerial(xoc)
 
       // bid
