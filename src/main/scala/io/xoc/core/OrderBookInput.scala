@@ -6,7 +6,6 @@ import chisel3.util.{DecoupledIO, Enum, is, switch}
 
 class OrderBookInputBundle extends Bundle {
   val isBid = Input(Bool())
-  // TODO: matching UART data bit width... will have to parametrise for arbitrary length
   val price = Input(UInt(8.W))
   val size = Input(UInt(8.W))
 }
@@ -46,13 +45,10 @@ class OrderBookInput extends Module {
 
       is(size) {
         sizeReg := io.rxData
-        // TODO test the line below
         expectByte := isBid
         validReg := true.B
       }
     }
-  } .otherwise {
-    validReg := false.B
   }
 }
 
