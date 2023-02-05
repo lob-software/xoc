@@ -27,7 +27,7 @@ class OrderBookOutput extends Module {
 
   io.output.ready := true.B
 
-  val orderBookDataValid = orderBook.bidPrice =/= 0.U & orderBook.bidSize =/= 0.U & orderBook.askPrice =/= 255.U & orderBook.askSize =/= 0.U
+  val orderBookDataValid = orderBook.bidPrice =/= 0.U & orderBook.bidSize =/= 0.U & orderBook.askPrice =/= 0.U & orderBook.askSize =/= 0.U
   val seqValid = seqValue < io.validSeq
 
   val valid = orderBookDataValid && seqValid

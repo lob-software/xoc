@@ -4,36 +4,6 @@ import chisel3._
 import chisel3.util._
 
 
-/**
- * Open questions:
- * 1. How deep and how wide should the order book be?
- *   - Can sizing be dynamic?
- *     2. What's the protocol for commands:
- *     Place order:
- *    - in:
- *    - out:
- *      Cancel order:
- *    - in:
- *    - out:
- *      3. How to make sure that the same command is only consumed by the module once?
- *    - ready and valid flags?
- *      4. Which data structures should be used for:
- *    - Orders
- *    - Price levels. Sorting of price levels and also storing of orders pertaining to price levels
- *      5. How will the data be communicated to the module?
- *    - UART?
- *    - Wishbone?
- *    - Something custom?
- */
-
-
-/**
- * First take.
- *
- * Order book with best bid and best offer, in price and in size.
- *
- */
-
 class OrderBook extends Module {
   val io = IO(new Bundle {
     val input = Flipped(DecoupledIO(new OrderBookInputBundle))
@@ -46,18 +16,18 @@ class OrderBook extends Module {
   val input = io.input.bits
   val output = io.output.bits
 
-  val currentBidPrice = RegInit(UInt(8.W), 0.U)
-  val currentBidSize = RegInit(UInt(8.W), 0.U)
+  val currentBidPrice = RegInit(0.U(8.W))
+  val currentBidSize = RegInit(0.U(8.W))
 
-  val currentAskPrice = RegInit(UInt(8.W), 255.U)
-  val currentAskSize = RegInit(UInt(8.W), 0.U)
+  val currentAskPrice = RegInit(0.U(8.W)) // TODO: find out why it is not possible to init to a value
+  val currentAskSize = RegInit(0.U(8.W))
 
   val validSeq = Counter(Byte.MaxValue)
   io.validSeq := validSeq.value
 
   val inputValidDelayed = RegNext(false.B)
   inputValidDelayed := io.input.valid
-  val orderBookDataValid = currentBidPrice =/= 0.U & currentBidSize =/= 0.U & currentAskPrice =/= 255.U & currentAskSize =/= 0.U
+  val orderBookDataValid = currentBidPrice =/= 0.U & currentBidSize =/= 0.U & currentAskPrice =/= 0.U & currentAskSize =/= 0.U
 
   when(inputValidDelayed && orderBookDataValid) {
     validSeq.inc()
@@ -71,7 +41,7 @@ class OrderBook extends Module {
     currentBidPrice := Mux(incomingBidBetter, input.price, currentBidPrice)
     currentBidSize := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
 
-    val incomingAskBetter = !input.isBid && input.price < currentAskPrice
+    val incomingAskBetter = !input.isBid && (input.price < currentAskPrice || currentAskPrice === 0.U)
     val incomingAskPriceTheSameAndSizeBigger = !input.isBid && input.price === currentAskPrice && input.size > currentAskSize
     currentAskPrice := Mux(incomingAskBetter, input.price, currentAskPrice)
     currentAskSize := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
@@ -82,7 +52,7 @@ class OrderBook extends Module {
   output.askPrice := currentAskPrice
   output.askSize := currentAskSize
 
-  val priceMatch = currentBidPrice >= currentAskPrice
+  val priceMatch = (currentBidPrice >= currentAskPrice) && (currentBidPrice =/= 0.U && currentAskPrice =/= 0.U)
 
   when(priceMatch) {
     // match

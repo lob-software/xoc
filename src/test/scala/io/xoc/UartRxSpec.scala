@@ -1,7 +1,7 @@
 package io.xoc
 
-import chiseltest._
 import chisel3._
+import chiseltest._
 import io.xoc.uart.UartRx
 import org.scalatest.flatspec.AnyFlatSpec
 

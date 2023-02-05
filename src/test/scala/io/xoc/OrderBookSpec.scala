@@ -35,7 +35,7 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
       ob.io.output.bits.bidPrice.expect(0)
       ob.io.output.bits.bidSize.expect(0)
 
-      ob.io.output.bits.askPrice.expect("xff".U) // TODO: find a better way
+      ob.io.output.bits.askPrice.expect(0)
       ob.io.output.bits.askSize.expect(0)
     }
   }
