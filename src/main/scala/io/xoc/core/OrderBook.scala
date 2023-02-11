@@ -33,6 +33,7 @@ class OrderBook extends Module {
     validSeq.inc()
   }
 
+  // TODO: orderBookDataValid - DRY
   io.output.valid := true.B
 
   when(io.input.valid) {

@@ -13,12 +13,12 @@ class Buffer extends Module {
   })
   val empty :: full :: Nil = Enum(2)
   val stateReg = RegInit(empty)
-  val dataReg = RegInit(0.U(8.W))
+  val bufferDataReg = RegInit(0.U(8.W))
   io.in.ready := stateReg === empty
   io.out.valid := stateReg === full
   when(stateReg === empty) {
     when(io.in.valid) {
-      dataReg := io.in.bits
+      bufferDataReg := io.in.bits
       stateReg := full
     }
   }.otherwise { // full
@@ -26,5 +26,5 @@ class Buffer extends Module {
       stateReg := empty
     }
   }
-  io.out.bits := dataReg
+  io.out.bits := bufferDataReg
 }

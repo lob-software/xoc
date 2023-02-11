@@ -31,7 +31,8 @@ class OrderBookOutput extends Module {
   val seqValid = seqValue < io.validSeq
 
   val valid = orderBookDataValid && seqValid
-  io.uart.valid := valid
+  io.uart.valid := valid && dataReg =/= 0.U // TODO: second part of the condition prevents UartTX from being engaged.
+  // Otherwise we wait all the clocks until 0 byte is transmitted.
   io.uart.bits := dataReg
 
   when(io.uart.ready && valid) {
