@@ -48,7 +48,7 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
     clockSerial(xoc)
   }
 
-  "XOC" should "work" in {
+  "XOC" should "rest orders and emit data" in {
     test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
       xoc.clock.setTimeout(0)
       xoc.io.uartRx.poke(1.U) // keep uart line high
@@ -71,6 +71,45 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
       // ask side
       assertByteTransmitted(xoc, 166.U)
       assertByteTransmitted(xoc, 222.U)
+    }
+  }
+
+  "XOC" should "rest orders and emit data in succession" in {
+    test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
+      xoc.clock.setTimeout(0)
+      xoc.io.uartRx.poke(1.U) // keep uart line high
+      clockSerial(xoc)
+
+      // bid
+      rxByte(xoc, 0.U)
+      rxByte(xoc, 100.U)
+      rxByte(xoc, 120.U)
+
+      // ask
+      rxByte(xoc, 1.U)
+      rxByte(xoc, 200.U)
+      rxByte(xoc, 220.U)
+
+      // bid side
+      assertByteTransmitted(xoc, 100.U)
+      assertByteTransmitted(xoc, 120.U)
+
+      // ask side
+      assertByteTransmitted(xoc, 200.U)
+      assertByteTransmitted(xoc, 220.U)
+
+      // bid
+      rxByte(xoc, 0.U)
+      rxByte(xoc, 101.U)
+      rxByte(xoc, 111.U)
+
+      // bid side
+      assertByteTransmitted(xoc, 101.U)
+      assertByteTransmitted(xoc, 111.U)
+
+      // ask side
+      assertByteTransmitted(xoc, 200.U)
+      assertByteTransmitted(xoc, 220.U)
     }
   }
 }

@@ -57,6 +57,7 @@ class OrderBookOutput extends Module {
         // we don't know if this value got consumed downstream. incrementing early can make data invalid and thus never be read
         // can we increment only when it is guaranteed that the value is consumed downstream?
         seqCounter.inc()
+        dataReg := 0.U
         expectByte := bidPrice
       }
     }
