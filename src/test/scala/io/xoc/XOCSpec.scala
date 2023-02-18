@@ -83,7 +83,7 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "XOC" should "rest orders and emit data in succession" in {
+  "XOC" should "accept better bid and emit data" in {
     test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
       xoc.clock.setTimeout(0)
       xoc.io.uartRx.poke(1.U) // keep uart line high
@@ -97,6 +97,23 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
       bid(xoc, 101, 111)
 
       assertOrderBookDataTransmitted(xoc, 101, 111, 200, 220)
+    }
+  }
+
+  "XOC" should "accept better ask and emit data" in {
+    test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
+      xoc.clock.setTimeout(0)
+      xoc.io.uartRx.poke(1.U) // keep uart line high
+      clockSerial(xoc)
+
+      bid(xoc, 100, 120)
+      ask(xoc, 200, 220)
+
+      assertOrderBookDataTransmitted(xoc, 100, 120, 200, 220)
+
+      ask(xoc, 190, 111)
+
+      assertOrderBookDataTransmitted(xoc, 100, 120, 190, 111)
     }
   }
 }
