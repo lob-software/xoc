@@ -48,29 +48,38 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
     clockSerial(xoc)
   }
 
+  private def bid(xoc: XOC, price: Int, size: Int): Unit = {
+    rxByte(xoc, 0.U)
+    rxByte(xoc, price.U)
+    rxByte(xoc, size.U)
+  }
+
+  private def ask(xoc: XOC, price: Int, size: Int): Unit = {
+    rxByte(xoc, 1.U)
+    rxByte(xoc, price.U)
+    rxByte(xoc, size.U)
+  }
+
+  private def assertOrderBookDataTransmitted(xoc: XOC, bidPrice: Int, bidSize: Int, askPrice: Int, askSize: Int): Unit = {
+    // bid side
+    assertByteTransmitted(xoc, bidPrice.U)
+    assertByteTransmitted(xoc, bidSize.U)
+
+    // ask side
+    assertByteTransmitted(xoc, askPrice.U)
+    assertByteTransmitted(xoc, askSize.U)
+  }
+
   "XOC" should "rest orders and emit data" in {
     test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
       xoc.clock.setTimeout(0)
       xoc.io.uartRx.poke(1.U) // keep uart line high
       clockSerial(xoc)
 
-      // bid
-      rxByte(xoc, 0.U)
-      rxByte(xoc, 131.U)
-      rxByte(xoc, 141.U)
+      bid(xoc, 131, 141)
+      ask(xoc, 166, 222)
 
-      // ask
-      rxByte(xoc, 1.U)
-      rxByte(xoc, 166.U)
-      rxByte(xoc, 222.U)
-
-      // bid side
-      assertByteTransmitted(xoc, 131.U)
-      assertByteTransmitted(xoc, 141.U)
-
-      // ask side
-      assertByteTransmitted(xoc, 166.U)
-      assertByteTransmitted(xoc, 222.U)
+      assertOrderBookDataTransmitted(xoc, 131, 141, 166, 222)
     }
   }
 
@@ -80,36 +89,14 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
       xoc.io.uartRx.poke(1.U) // keep uart line high
       clockSerial(xoc)
 
-      // bid
-      rxByte(xoc, 0.U)
-      rxByte(xoc, 100.U)
-      rxByte(xoc, 120.U)
+      bid(xoc, 100, 120)
+      ask(xoc, 200, 220)
 
-      // ask
-      rxByte(xoc, 1.U)
-      rxByte(xoc, 200.U)
-      rxByte(xoc, 220.U)
+      assertOrderBookDataTransmitted(xoc, 100, 120, 200, 220)
 
-      // bid side
-      assertByteTransmitted(xoc, 100.U)
-      assertByteTransmitted(xoc, 120.U)
+      bid(xoc, 101, 111)
 
-      // ask side
-      assertByteTransmitted(xoc, 200.U)
-      assertByteTransmitted(xoc, 220.U)
-
-      // bid
-      rxByte(xoc, 0.U)
-      rxByte(xoc, 101.U)
-      rxByte(xoc, 111.U)
-
-      // bid side
-      assertByteTransmitted(xoc, 101.U)
-      assertByteTransmitted(xoc, 111.U)
-
-      // ask side
-      assertByteTransmitted(xoc, 200.U)
-      assertByteTransmitted(xoc, 220.U)
+      assertOrderBookDataTransmitted(xoc, 101, 111, 200, 220)
     }
   }
 }
