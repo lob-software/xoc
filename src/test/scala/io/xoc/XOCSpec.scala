@@ -116,4 +116,38 @@ class XOCSpec extends AnyFlatSpec with ChiselScalatestTester {
       assertOrderBookDataTransmitted(xoc, 100, 120, 190, 111)
     }
   }
+
+  "XOC" should "match aggressive bid" in {
+    test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
+      xoc.clock.setTimeout(0)
+      xoc.io.uartRx.poke(1.U) // keep uart line high
+      clockSerial(xoc)
+
+      bid(xoc, 100, 120)
+      ask(xoc, 200, 220)
+
+      assertOrderBookDataTransmitted(xoc, 100, 120, 200, 220)
+
+      bid(xoc, 200, 20)
+
+      assertOrderBookDataTransmitted(xoc, 100, 120, 200, 200)
+    }
+  }
+
+  "XOC" should "match aggressive ask" in {
+    test(new XOC(CLKS_PER_BIT)).withAnnotations(Seq(WriteVcdAnnotation)) { xoc =>
+      xoc.clock.setTimeout(0)
+      xoc.io.uartRx.poke(1.U) // keep uart line high
+      clockSerial(xoc)
+
+      bid(xoc, 100, 120)
+      ask(xoc, 200, 220)
+
+      assertOrderBookDataTransmitted(xoc, 100, 120, 200, 220)
+
+      ask(xoc, 100, 20)
+
+      assertOrderBookDataTransmitted(xoc, 100, 100, 200, 220)
+    }
+  }
 }
