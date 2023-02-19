@@ -64,7 +64,7 @@ class OrderBook extends Module {
       output.askSize := currentAskSize - input.size
     }.otherwise {
       // aggressive ask
-      output.askPrice := Long.MaxValue.U
+      output.askPrice := 0.U
       output.askSize := 0.U
       output.bidSize := currentBidSize - input.size
     }

@@ -1,7 +1,6 @@
 package io.xoc
 
 import chiseltest._
-import chisel3._
 import io.xoc.core.OrderBook
 import org.scalatest.flatspec.AnyFlatSpec
 
@@ -148,10 +147,10 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
 
       ask(ob, 100, 10)
 
-      ob.io.output.bits.askPrice.expect("xff".U)
-      ob.io.output.bits.askSize.expect(0)
       ob.io.output.bits.bidPrice.expect(100)
       ob.io.output.bits.bidSize.expect(90)
+      ob.io.output.bits.askPrice.expect(0)
+      ob.io.output.bits.askSize.expect(0)
     }
   }
 }
