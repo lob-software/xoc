@@ -27,11 +27,10 @@ class OrderBookOutput extends Module {
 
   io.output.ready := true.B
 
-  val orderBookDataValid = orderBook.bidPrice =/= 0.U & orderBook.bidSize =/= 0.U & orderBook.askPrice =/= 0.U & orderBook.askSize =/= 0.U
   val seqValid = seqValue < io.validSeq
 
-  val valid = orderBookDataValid && seqValid
-  io.uart.valid := valid && dataReg =/= 0.U // TODO: second part of the condition prevents UartTX from being engaged.
+  val valid = io.output.valid && seqValid
+  io.uart.valid := valid && dataReg =/= 0.U // TODO: second part of the condition prevents UartTX from being engaged on "null" values.
   // Otherwise we wait all the clocks until 0 byte is transmitted.
   io.uart.bits := dataReg
 

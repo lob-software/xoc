@@ -33,42 +33,38 @@ class OrderBook extends Module {
     validSeq.inc()
   }
 
-  // TODO: orderBookDataValid - DRY
-  io.output.valid := true.B
+  io.output.valid := orderBookDataValid
 
   when(io.input.valid) {
-    val incomingBidBetter = input.isBid && input.price > currentBidPrice
-    val incomingBidPriceTheSameAndSizeBigger = input.isBid && input.price === currentBidPrice && input.size > currentBidSize
-    currentBidPrice := Mux(incomingBidBetter, input.price, currentBidPrice)
-    currentBidSize := Mux(incomingBidBetter, input.size, Mux(incomingBidPriceTheSameAndSizeBigger, input.size, currentBidSize))
+    when(input.isBid) {
+      val priceBetter = input.price > currentBidPrice
+      val priceTheSameAndSizeGreater = input.price === currentBidPrice && input.size > currentBidSize
+      currentBidPrice := Mux(priceBetter, input.price, currentBidPrice)
+      currentBidSize := Mux(priceBetter, input.size, Mux(priceTheSameAndSizeGreater, input.size, currentBidSize))
 
-    val incomingAskBetter = !input.isBid && (input.price < currentAskPrice || currentAskPrice === 0.U)
-    val incomingAskPriceTheSameAndSizeBigger = !input.isBid && input.price === currentAskPrice && input.size > currentAskSize
-    currentAskPrice := Mux(incomingAskBetter, input.price, currentAskPrice)
-    currentAskSize := Mux(incomingAskBetter, input.size, Mux(incomingAskPriceTheSameAndSizeBigger, input.size, currentAskSize))
+      when(input.price >= currentAskPrice && currentAskPrice =/= 0.U) {
+        currentBidPrice := 0.U
+        currentBidSize := 0.U
+        currentAskSize := currentAskSize - input.size
+      }
+    }.otherwise {
+      val priceBetter = input.price < currentAskPrice || currentAskPrice === 0.U
+      val priceTheSameAndSizeGreater = input.price === currentAskPrice && input.size > currentAskSize
+      currentAskPrice := Mux(priceBetter, input.price, currentAskPrice)
+      currentAskSize := Mux(priceBetter, input.size, Mux(priceTheSameAndSizeGreater, input.size, currentAskSize))
+
+      when(input.price <= currentBidPrice && currentBidPrice =/= 0.U) {
+        currentAskPrice := 0.U
+        currentAskSize := 0.U
+        currentBidSize := currentBidSize - input.size
+      }
+    }
   }
 
   output.bidPrice := currentBidPrice
   output.bidSize := currentBidSize
   output.askPrice := currentAskPrice
   output.askSize := currentAskSize
-
-  val priceMatch = (currentBidPrice >= currentAskPrice) && (currentBidPrice =/= 0.U && currentAskPrice =/= 0.U)
-
-  when(priceMatch) {
-    // match
-    when(input.isBid) {
-      // aggressive bid
-      output.bidPrice := 0.U
-      output.bidSize := 0.U
-      output.askSize := currentAskSize - input.size
-    }.otherwise {
-      // aggressive ask
-      output.askPrice := 0.U
-      output.askSize := 0.U
-      output.bidSize := currentBidSize - input.size
-    }
-  }
 }
 
 object OrderBook extends App {
