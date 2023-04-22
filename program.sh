@@ -1,13 +1,8 @@
 #!/bin/sh
 
-DESIGN=$1
-MAIN_CLASS=$2
+sbt "runMain io.xoc.XOC"
 
-echo programming with "$DESIGN"
-
-sbt "runMain $MAIN_CLASS"
-
-vivado -nojournal -mode batch -source src/main/tcl/synth.tcl -tclargs arty-a7-100 "$DESIGN" outputs/synth.log
+vivado -nojournal -mode batch -source src/main/tcl/synth.tcl -tclargs arty-a7-100 XOC outputs/synth.log
 
 vivado -nojournal -mode batch -source src/main/tcl/place.tcl -log outputs/place.log
 
