@@ -7,3 +7,4 @@
 # Project exclude paths
 /project/target/
 /.bsp/
+/src/main/python/.idea/
