@@ -9,10 +9,6 @@ class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
   val io = IO(new Bundle() {
     val uartRx = Input(Bool())
     val uartTx = Output(Bool())
-    val led = Output(UInt(4.W))
-    val led_r = Output(UInt(4.W))
-    val led_g = Output(UInt(4.W))
-    val led_b = Output(UInt(4.W))
   })
 
   private val disabledReset: Bool = false.B
@@ -50,12 +46,6 @@ class XOC(CLKS_PER_BIT: Int = 10417) extends Module {
     uartTx.io.txDataValid := outputBuffer.io.out.valid
     uartTx.io.txData := outputBuffer.io.out.bits
     outputBuffer.io.out.ready := !txActive
-
-    io.led := Mux(orderBook.io.input.valid, "b1111".U, "b0000".U) // orderBookInput.io.input.bits.price(3, 0)
-    io.led_g := orderBook.io.output.bits.askPrice // Mux(orderBook.io.output.valid, "b1111".U, "b0000".U) // orderBookInput.io.input.bits.price(3, 0)
-//    io.led_g := 0.U //Mux(orderBook.io.output.valid =/= 0.U, "b1111".U, "b0000".U) // orderBookInput.io.input.bits.price(7, 4)
-    io.led_r := 0.U //orderBook.io.output.bits.bidPrice //Mux(orderBook.io.output.bits.bidSize =/= 0.U, "b1111".U, "b0000".U) // orderBookInput.io.input.bits.price(3, 0)
-    io.led_b := orderBook.io.output.bits.bidPrice  //Mux(orderBook.io.output.bits.askSize =/= 0.U, "b1111".U, "b0000".U) // orderBookInput.io.input.bits.price(3, 0)
   }
 }
 
