@@ -21,7 +21,7 @@ def ask(price, size, s):
 
 
 def transmit_book_data(s):
-    ret = s.readline()[-4:]
+    ret = s.read(4)
     if ret:
         bid_price = ret[0]
         bid_size = ret[1]
@@ -33,8 +33,9 @@ def transmit_book_data(s):
 if __name__ == '__main__':
     args = sys.argv
     side = args[1]
-    price = int(args[2])
-    size = int(args[3])
+    size, price = map(int, args[2].split("@"))
+
+    print(f"Received command to place a {side} of size {size} at price {price}")
 
     with serial.Serial(port, timeout=2, baudrate=9600) as ser:
         if side == 'bid':
