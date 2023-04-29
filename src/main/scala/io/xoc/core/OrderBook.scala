@@ -19,7 +19,7 @@ class OrderBook extends Module {
   val currentBidPrice = RegInit(0.U(8.W))
   val currentBidSize = RegInit(0.U(8.W))
 
-  val currentAskPrice = RegInit(0.U(8.W)) // TODO: find out why emitted verilog does not respect init value
+  val currentAskPrice = RegInit(0.U(8.W))
   val currentAskSize = RegInit(0.U(8.W))
 
   val validSeq = Counter(Byte.MaxValue)
