@@ -22,8 +22,8 @@ This will generate idempotently generate verilog and program the board with resu
 After the board is programmed with the design, you can use python UART client to send orders to the order book:
 
 ```shell
-python3 /home/eliquinox/code/fpga/xoc/src/main/python/xoc.py bid 100@100
-python3 /home/eliquinox/code/fpga/xoc/src/main/python/xoc.py ask 100@120
+python3 xoc.py bid 100@100
+python3 xoc.py ask 100@120
 ```
 You should see an output indicating the current state of the order book:
 
