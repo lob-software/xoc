@@ -182,6 +182,34 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
+  "OrderBook" should "match incoming ask with resting bid when incoming size bigger" in {
+    test(new OrderBook()) { ob =>
+      bid(ob, 100, 100)
+      ask(ob, 110, 100)
+
+      ask(ob, 90, 110)
+
+      ob.io.output.bits.bidPrice.expect(0)
+      ob.io.output.bits.bidSize.expect(0)
+      ob.io.output.bits.askPrice.expect(90)
+      ob.io.output.bits.askSize.expect(10)
+    }
+  }
+
+  "OrderBook" should "match incoming bid with resting ask when incoming size bigger" in {
+    test(new OrderBook()) { ob =>
+      bid(ob, 100, 100)
+      ask(ob, 110, 100)
+
+      bid(ob, 111, 110)
+
+      ob.io.output.bits.bidPrice.expect(111)
+      ob.io.output.bits.bidSize.expect(10)
+      ob.io.output.bits.askPrice.expect(0)
+      ob.io.output.bits.askSize.expect(0)
+    }
+  }
+
   "OrderBook" should "re-establish bid at lower price then the bid fully consumed" in {
     test(new OrderBook()).withAnnotations(Seq(WriteVcdAnnotation)) { ob =>
       bid(ob, 90, 100)

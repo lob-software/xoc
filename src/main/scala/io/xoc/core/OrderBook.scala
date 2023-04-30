@@ -48,7 +48,16 @@ class OrderBook extends Module {
       when(input.price >= currentAskPrice && currentAskDefined) {
         // match
         when(currentBidDefined) {
-          currentAskSize := currentAskSize - input.size
+          when(input.size > currentAskSize) {
+            // full | overflow match
+            currentBidSize := input.size - currentAskSize
+            currentBidPrice := input.price
+            currentAskPrice := 0.U
+            currentAskSize := 0.U
+          }.otherwise {
+            // partial match
+            currentAskSize := currentAskSize - input.size
+          }
         }.otherwise {
           currentBidPrice := 0.U
           currentBidSize := 0.U
@@ -63,7 +72,16 @@ class OrderBook extends Module {
       when(input.price <= currentBidPrice && currentBidDefined) {
         // match
         when(currentAskDefined) {
-          currentBidSize := currentBidSize - input.size
+          when(input.size > currentBidSize) {
+            // full | overflow match
+            currentAskPrice := input.price
+            currentAskSize := input.size - currentBidSize
+            currentBidSize := 0.U
+            currentBidPrice := 0.U
+          }.otherwise {
+            // partial match
+            currentBidSize := currentBidSize - input.size
+          }
         }.otherwise {
           currentAskPrice := 0.U
           currentAskSize := 0.U
