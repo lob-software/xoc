@@ -41,10 +41,12 @@ class OrderBook extends Module {
   output.askSize := currentAskSize
 
   when(io.input.valid) {
+    val currentBidDefined = currentBidPrice =/= 0.U && currentBidSize =/= 0.U
+    val currentAskDefined = currentAskPrice =/= 0.U && currentAskSize =/= 0.U
+
     when(input.isBid) {
-      when(input.price >= currentAskPrice && currentAskPrice =/= 0.U && currentAskSize =/= 0.U) {
+      when(input.price >= currentAskPrice && currentAskDefined) {
         // match
-        val currentBidDefined = currentBidPrice =/= 0.U && currentBidSize =/= 0.U
         when(currentBidDefined) {
           currentAskSize := currentAskSize - input.size
         }.otherwise {
@@ -58,9 +60,8 @@ class OrderBook extends Module {
         currentBidSize := input.size
       }
     }.otherwise {
-      when(input.price <= currentBidPrice && currentBidPrice =/= 0.U && currentBidSize =/= 0.U) {
+      when(input.price <= currentBidPrice && currentBidDefined) {
         // match
-        val currentAskDefined = currentAskPrice =/= 0.U && currentAskSize =/= 0.U
         when(currentAskDefined) {
           currentBidSize := currentBidSize - input.size
         }.otherwise {
