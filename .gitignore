@@ -8,3 +8,4 @@
 /project/target/
 /.bsp/
 /src/main/python/.idea/
+/src/main/python/venv/
