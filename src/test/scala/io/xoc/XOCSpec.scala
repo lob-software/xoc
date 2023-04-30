@@ -2,7 +2,6 @@ package io.xoc
 
 import chisel3._
 import chiseltest._
-import io.xoc.core.OrderBookInputBuffer
 import org.scalatest.flatspec.AnyFlatSpec
 
 

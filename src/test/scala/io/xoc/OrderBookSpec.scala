@@ -181,4 +181,40 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
       ob.io.output.bits.askSize.expect(10)
     }
   }
+
+  "OrderBook" should "re-establish bid at lower price then the bid fully consumed" in {
+    test(new OrderBook()).withAnnotations(Seq(WriteVcdAnnotation)) { ob =>
+      bid(ob, 90, 100)
+      ask(ob, 100, 10)
+
+      // consume bid
+      ask(ob, 90, 100)
+
+      // re-establish bid at lower price
+      bid(ob, 80, 100)
+
+      ob.io.output.bits.bidPrice.expect(80)
+      ob.io.output.bits.bidSize.expect(100)
+      ob.io.output.bits.askPrice.expect(100)
+      ob.io.output.bits.askSize.expect(10)
+    }
+  }
+
+  "OrderBook" should "re-establish ask at higher price then the ask fully consumed" in {
+    test(new OrderBook()).withAnnotations(Seq(WriteVcdAnnotation)) { ob =>
+      bid(ob, 90, 100)
+      ask(ob, 100, 10)
+
+      // consume ask
+      bid(ob, 100, 10)
+
+      // re-establish ask at higher price
+      ask(ob, 110, 100)
+
+      ob.io.output.bits.bidPrice.expect(90)
+      ob.io.output.bits.bidSize.expect(100)
+      ob.io.output.bits.askPrice.expect(110)
+      ob.io.output.bits.askSize.expect(100)
+    }
+  }
 }

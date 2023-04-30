@@ -42,7 +42,7 @@ class OrderBook extends Module {
 
   when(io.input.valid) {
     when(input.isBid) {
-      when(input.price >= currentAskPrice && currentAskPrice =/= 0.U) {
+      when(input.price >= currentAskPrice && currentAskPrice =/= 0.U && currentAskSize =/= 0.U) {
         // match
         val currentBidDefined = currentBidPrice =/= 0.U && currentBidSize =/= 0.U
         when(currentBidDefined) {
@@ -52,15 +52,13 @@ class OrderBook extends Module {
           currentBidSize := 0.U
           currentAskSize := currentAskSize - input.size
         }
-      }.otherwise {
+      }.elsewhen(currentBidSize === 0.U || input.price > currentBidPrice || (input.price === currentBidPrice && input.size > currentBidSize)) {
         // rest
-        val priceBetter = input.price > currentBidPrice
-        val priceTheSameAndSizeGreater = input.price === currentBidPrice && input.size > currentBidSize
-        currentBidPrice := Mux(priceBetter, input.price, currentBidPrice)
-        currentBidSize := Mux(priceBetter, input.size, Mux(priceTheSameAndSizeGreater, input.size, currentBidSize))
+        currentBidPrice := input.price
+        currentBidSize := input.size
       }
     }.otherwise {
-      when(input.price <= currentBidPrice && currentBidPrice =/= 0.U) {
+      when(input.price <= currentBidPrice && currentBidPrice =/= 0.U && currentBidSize =/= 0.U) {
         // match
         val currentAskDefined = currentAskPrice =/= 0.U && currentAskSize =/= 0.U
         when(currentAskDefined) {
@@ -70,12 +68,10 @@ class OrderBook extends Module {
           currentAskSize := 0.U
           currentBidSize := currentBidSize - input.size
         }
-      }.otherwise {
+      }.elsewhen(currentAskSize === 0.U || input.price < currentAskPrice || (input.price === currentAskPrice && input.size > currentAskSize)) {
         // rest
-        val priceBetter = input.price < currentAskPrice || currentAskPrice === 0.U
-        val priceTheSameAndSizeGreater = input.price === currentAskPrice && input.size > currentAskSize
-        currentAskPrice := Mux(priceBetter, input.price, currentAskPrice)
-        currentAskSize := Mux(priceBetter, input.size, Mux(priceTheSameAndSizeGreater, input.size, currentAskSize))
+        currentAskPrice := input.price
+        currentAskSize := input.size
       }
     }
   }
