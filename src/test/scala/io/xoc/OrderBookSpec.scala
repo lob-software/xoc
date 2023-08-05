@@ -210,7 +210,7 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "OrderBook" should "re-establish bid at lower price then the bid fully consumed" in {
+  "OrderBook" should "re-establish bid at lower price when the bid fully consumed" in {
     test(new OrderBook()).withAnnotations(Seq(WriteVcdAnnotation)) { ob =>
       bid(ob, 90, 100)
       ask(ob, 100, 10)
@@ -228,7 +228,7 @@ class OrderBookSpec extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "OrderBook" should "re-establish ask at higher price then the ask fully consumed" in {
+  "OrderBook" should "re-establish ask at higher price when the ask fully consumed" in {
     test(new OrderBook()).withAnnotations(Seq(WriteVcdAnnotation)) { ob =>
       bid(ob, 90, 100)
       ask(ob, 100, 10)
