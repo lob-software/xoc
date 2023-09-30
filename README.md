@@ -6,8 +6,7 @@ UART (Universal Asynchronous Receiver-Transmitter) is used for communication wit
 ## Prerequisites
 
 1. Install Vivado: Download and install Xilinx Vivado Design Suite from the [Xilinx website](https://www.xilinx.com/support/download.html). Make sure to include the required FPGA board files for the Arty A7 100T during the installation process.
-2. Install Digilent Adept: Download and install the [Digilent Adept software suite](https://digilent.com/reference/software/adept/start), which includes the `djtgcfg` utility. You may need to run `djtgcfg enum` and `djtgcfg init -d <device_name>`
-in order to initialise USB connectivity to the board.
+2. Install [openFPGALoader](https://trabucayre.github.io/openFPGALoader/index.html) in order to load bitstreams onto the board.
 
 ## Usage
 
@@ -17,7 +16,7 @@ To program the board, run
 ./program.sh
 ```
 
-This will generate idempotently generate verilog and program the board with resulting XOC design.
+This will idempotently generate verilog and program the board with resulting XOC design.
 
 After the board is programmed with the design, you can use python UART client to send orders to the order book:
 

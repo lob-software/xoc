@@ -4,6 +4,6 @@ sbt "runMain io.xoc.XOC"
 
 vivado -mode batch -nolog -nojournal -source src/main/tcl/build.tcl
 
-djtgcfg prog --file outputs/top.bit -d Arty -i 0
+openFPGALoader -b arty outputs/top.bit
 
-rm usage_statistics_webtalk.html usage_statistics_webtalk.xml
+rm -rf .Xil usage_statistics_webtalk.html usage_statistics_webtalk.xml
