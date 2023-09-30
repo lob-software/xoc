@@ -2,11 +2,7 @@
 
 sbt "runMain io.xoc.XOC"
 
-vivado -nojournal -mode batch -source src/main/tcl/synth.tcl -tclargs arty-a7-100 XOC outputs/synth.log
-
-vivado -nojournal -mode batch -source src/main/tcl/place.tcl -log outputs/place.log
-
-vivado -nojournal -mode batch -source src/main/tcl/route.tcl -log outputs/route.log
+vivado -mode batch -nolog -nojournal -source src/main/tcl/build.tcl
 
 djtgcfg prog --file outputs/top.bit -d Arty -i 0
 
