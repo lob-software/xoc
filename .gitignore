@@ -9,3 +9,4 @@
 /.bsp/
 /src/main/python/.idea/
 /src/main/python/venv/
+/clockInfo.txt

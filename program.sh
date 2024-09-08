@@ -2,6 +2,8 @@
 
 sbt "runMain io.xoc.XOC"
 
+mkdir -p "outputs"
+
 vivado -mode batch -nolog -nojournal -source src/main/tcl/build.tcl
 
 openFPGALoader -b arty outputs/top.bit

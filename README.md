@@ -21,6 +21,8 @@ This will idempotently generate verilog and program the board with resulting XOC
 After the board is programmed with the design, you can use python UART client to send orders to the order book:
 
 ```shell
+cd src/main/python
+
 python3 xoc.py bid 100@100
 python3 xoc.py ask 100@120
 ```
